@@ -6,6 +6,7 @@ import Vol6.QuotientOrthogonalityAdmissibility
 import Vol6.YonedaBlaschkeDetectorCalculus
 import Vol6.RHClassicalNewLanguage
 import Vol6.Closure
+import Vol6.Vol5_5
 
 /-!
 # Vol6 — root entry point
@@ -22,6 +23,7 @@ Sprint modules:
 * `Vol6.QuotientOrthogonalityAdmissibility`-- 2.3 + 2.4 (paper 05)
 * `Vol6.YonedaBlaschkeDetectorCalculus`    -- target 2 assembly (paper 06)
 * `Vol6.Closure`                           -- four-field closure roadmap status
+* `Vol6.Vol5_5`                             -- transparent proof-interface layer
 
 Synthesis module `Vol6.RHClassicalNewLanguage` is added in paper 07; it is
 imported by `Vol6.lean` only after paper 07 has been written and built.
