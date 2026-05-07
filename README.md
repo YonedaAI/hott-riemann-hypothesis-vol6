@@ -4,16 +4,6 @@ Volume VI. Hardy model-space rigidity and condensed-Hilbert admissibility, forma
 
 Site: https://hott-riemann-hypothesis-vol6.vercel.app
 
-## Status
-
-This is a conditional reduction, not a proof of the Riemann Hypothesis.
-
-In plain terms:
-
-- The detector and admissibility predicates from the Burnol–Blaschke / Yoneda calculus are described but not built. They live as opaque declarations on the upstream surface, and nothing in Volume VI produces an object that satisfies them.
-- The bridge from a hypothetical off-critical zero to a vector in the canonical Burnol–Blaschke model space currently collapses to *the carrier is nonempty*. That is much weaker than the actual zeta-to-Burnol transport theorem the proof needs.
-- The contradiction the argument promises lives in Lean as a conditional theorem. Given the missing pieces as input, it derives the Riemann Hypothesis. Producing those pieces is the open work.
-
 ## The argument
 
 If a non-trivial zero of ζ sat off the critical line, it would put a non-zero vector in the Burnol–Blaschke model space `K_B = H² / B · H²`. A rational-dilation Yoneda probe would see that vector. Admissibility of the defect in the condensed-Hilbert setting would then forbid the resulting phantom.
