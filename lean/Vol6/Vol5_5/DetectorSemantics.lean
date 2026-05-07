@@ -56,6 +56,25 @@ def externalizationIntroductionRule_of_transparentDetectorRelation
       (H.detects_of_model_detector hDetector)
 
 /--
+Any existing Vol6 detector-indexed introduction rule is already a transparent
+detector relation, with the relation chosen to be the model detector predicate.
+-/
+def transparentDetectorRelation_of_externalizationIntroductionRule
+    {K : CondensedHilbertDefect}
+    {S : RKHSModelSpaceDetector K}
+    {R : RationalDilationObjectSemantics}
+    (iota : ExternalizationIntroductionRule K S R) :
+    TransparentDetectorRelation K S R where
+  parameterOf := iota.parameterOf
+  Detects := S.detectsVector
+  detects_of_model_detector := by
+    intro _ _ h
+    exact h
+  vol5_detected_of_detects := by
+    intro _ _ h
+    exact iota.detected_of_detector h
+
+/--
 The transparent detector relation supplies the externalization structure used
 by Vol5's RKHS detector semantics.
 -/

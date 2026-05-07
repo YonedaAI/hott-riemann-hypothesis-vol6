@@ -85,6 +85,31 @@ theorem canonicalAdmissibilityIntroduction_of_transparentAdmissibilityData
     Vol6.Obstruction.CanonicalAdmissibilityIntroduction :=
   admissibilityIntroduction_of_transparentAdmissibilityData A
 
+/--
+Any existing Vol6 admissibility introduction package is already transparent
+admissibility data, with singleton certificate types and the introduction
+fields as the certificate interpretation maps.
+-/
+noncomputable def transparentAdmissibilityData_of_admissibilityIntroduction
+    {K : BlaschkeDefectObject}
+    (A : Vol6.Obstruction.AdmissibilityIntroduction K) :
+    TransparentAdmissibilityData K where
+  DualizableCertificate := Unit
+  PolarizedCertificate := Unit
+  RegularizedCertificate := Unit
+  dualizableCertificate := ()
+  polarizedCertificate := ()
+  regularizedCertificate := ()
+  dualizable_of_certificate := fun _ => A.dualizable_of_finite_rank
+  polarized_of_certificate := fun _ => A.polarized_of_finite_rank
+  regularized_of_certificate := fun _ => A.regularized_of_finite_rank
+
+/-- Canonical specialization of the reverse transparent admissibility adapter. -/
+noncomputable def transparentAdmissibilityData_of_canonicalAdmissibilityIntroduction
+    (A : Vol6.Obstruction.CanonicalAdmissibilityIntroduction) :
+    BurnolBlaschkeTransparentAdmissibilityData :=
+  transparentAdmissibilityData_of_admissibilityIntroduction A
+
 /-- Audit marker for the transparent admissibility layer. -/
 def transparentAdmissibilityStatus : String :=
   "Vol5.5 admissibility interface installed: dualizable, polarized, and regularized certificates are explicit data before being mapped into the Vol5 admissibility fields."

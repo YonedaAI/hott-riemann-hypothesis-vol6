@@ -48,6 +48,12 @@ def bridge_of_finitePacketTransportPackage
     OffCriticalDefectKernelBridge where
   transport := P.transport
 
+/-- Any existing Vol6 bridge gives the legacy Vol5.5 transport package. -/
+def finitePacketTransportPackage_of_bridge
+    (bridge : OffCriticalDefectKernelBridge) :
+    FinitePacketTransportPackage where
+  transport := bridge.transport
+
 /-- The legacy package proves Vol5's older carrier-nonempty kernel payload. -/
 theorem offCriticalZeroDefectKernel_of_finitePacketTransportPackage
     (P : FinitePacketTransportPackage) :
@@ -91,6 +97,19 @@ def finitePacketTransportPackage_of_strengthened
   transport := P.transport
 
 /--
+With Vol5's current zero-defect semantics, a genuine transport into the
+canonical Burnol carrier already proves the transported vector creates a
+nonzero canonical defect: a zero defect would make the carrier empty.
+-/
+noncomputable def strengthenedFinitePacketTransportPackage_of_finitePacketTransportPackage
+    (P : FinitePacketTransportPackage) :
+    StrengthenedFinitePacketTransportPackage where
+  transport := P.transport
+  nonzero_defect_of_transport := by
+    intro Q hQ v hZero
+    exact hZero.vanishing.quotientZero.false (P.transport Q hQ v)
+
+/--
 Turn a strengthened finite-packet transport package into the proof-facing
 transparent off-critical transport package.
 -/
@@ -127,6 +146,50 @@ theorem offCriticalZeroDefectKernel_of_strengthenedFinitePacketTransportPackage
     OffCriticalZeroDefectKernel :=
   offCriticalZeroDefectKernel_of_transport
     (offCriticalTransport_of_strengthenedFinitePacketTransportPackage P)
+
+/-- A legacy finite-packet package gives the proof-facing transport package. -/
+noncomputable def offCriticalTransport_of_finitePacketTransportPackage
+    (P : FinitePacketTransportPackage) :
+    OffCriticalTransport :=
+  offCriticalTransport_of_strengthenedFinitePacketTransportPackage
+    (strengthenedFinitePacketTransportPackage_of_finitePacketTransportPackage P)
+
+/-! ## Exact closure status for the strengthened package -/
+
+/--
+The strengthened finite-packet package has exactly the same remaining content
+as the legacy finite-packet transport package.  The new nonzero-defect field
+is forced by Vol5's current zero-defect-as-empty-carrier semantics once a real
+transport into the canonical carrier is available.
+-/
+theorem nonempty_strengthenedFinitePacketTransportPackage_iff_nonempty_finitePacketTransportPackage :
+    Nonempty StrengthenedFinitePacketTransportPackage <->
+      Nonempty FinitePacketTransportPackage := by
+  constructor
+  · rintro ⟨P⟩
+    exact ⟨finitePacketTransportPackage_of_strengthened P⟩
+  · rintro ⟨P⟩
+    exact ⟨strengthenedFinitePacketTransportPackage_of_finitePacketTransportPackage P⟩
+
+/-- The legacy finite-packet package is exactly the old Vol6 bridge. -/
+theorem nonempty_finitePacketTransportPackage_iff_nonempty_bridge :
+    Nonempty FinitePacketTransportPackage <->
+      Nonempty OffCriticalDefectKernelBridge := by
+  constructor
+  · rintro ⟨P⟩
+    exact ⟨bridge_of_finitePacketTransportPackage P⟩
+  · rintro ⟨bridge⟩
+    exact ⟨finitePacketTransportPackage_of_bridge bridge⟩
+
+/--
+The strengthened package is therefore exactly equivalent to the old Vol6
+finite-packet transport bridge.
+-/
+theorem nonempty_strengthenedFinitePacketTransportPackage_iff_nonempty_bridge :
+    Nonempty StrengthenedFinitePacketTransportPackage <->
+      Nonempty OffCriticalDefectKernelBridge :=
+  nonempty_strengthenedFinitePacketTransportPackage_iff_nonempty_finitePacketTransportPackage.trans
+    nonempty_finitePacketTransportPackage_iff_nonempty_bridge
 
 /-- The strengthened bridge proves the direct Vol5 creation target. -/
 theorem offCriticalZeroCreatesDefect_of_offCriticalTransport
