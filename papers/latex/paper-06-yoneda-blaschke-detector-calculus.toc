@@ -1,0 +1,50 @@
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}The vol5 conditional theorem and the two payloads}{4}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Scope of the present paper}{4}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Obstruction-only delivery}{5}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Summary of contributions}{5}{subsection.1.4}%
+\contentsline {section}{\numberline {2}Mathematical Framework}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The unit disc, Hardy space, and Blaschke factor}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}The Yoneda category \(\mathcal {D}_{Q}\) and the Nyman kernel identification}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}The Burnol/Blaschke condensed Hilbert defect}{6}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}The four sub-target types}{7}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Sub-target Review}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Paper~02: Detector Completeness}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Paper~04: Rational-Dilation Externalization}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Paper~05A: Quotient Orthogonality}{8}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Paper~05B: Admissibility}{9}{subsection.3.4}%
+\contentsline {section}{\numberline {4}The Assembly}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}The bundled sub-target type}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}The assembly map}{9}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Categorical recasting}{10}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Composition with Paper~03 to Recover $\mathrm {RH}_{\mathrm {classical}}$}{10}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Paper~03 in one line}{10}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}The synthesis composition}{11}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Compositional diagram}{11}{subsection.5.3}%
+\contentsline {section}{\numberline {6}The Obstruction Module}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Why an obstruction is needed}{11}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Structure of the obstruction module}{12}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Propagation contract}{12}{subsection.6.3}%
+\contentsline {section}{\numberline {7}No-Phantom Audit}{12}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Forbidden-symbol scan}{12}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Compliance with vol5 hard rules}{13}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Build status}{13}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Worked Example: A 3-Zero Packet}{13}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Specification}{13}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Output}{13}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Interpretation}{14}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Results}{14}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Principal Lean theorems}{14}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Status of the unconditional principal theorem}{14}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Audit results}{14}{subsection.9.3}%
+\contentsline {section}{\numberline {10}Discussion}{14}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Why the assembly is mathematically uneventful but logistically essential}{14}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Comparison with the finite-rank version of vol5}{15}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}The role of paper~03}{15}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Robustness to changes in the upstream sub-target types}{15}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Future-proofing for paper~07}{15}{subsection.10.5}%
+\contentsline {section}{\numberline {11}Conclusion}{16}{section.11}%
+\contentsline {section}{\numberline {A}Lean Module Listing (excerpts)}{16}{appendix.A}%
+\contentsline {section}{\numberline {B}Obstruction Module Listing (excerpts)}{17}{appendix.B}%
+\contentsline {section}{\numberline {C}Haskell Demonstration (excerpt)}{18}{appendix.C}%
+\contentsline {section}{\numberline {D}References}{19}{appendix.D}%

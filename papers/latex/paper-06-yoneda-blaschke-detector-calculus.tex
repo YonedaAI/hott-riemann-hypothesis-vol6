@@ -1,0 +1,1155 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{tikz-cd}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{everypage}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\geometry{margin=1in}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\HardyTwo}{H^{2}}
+\newcommand{\KB}{K_{B}}
+\newcommand{\BHardy}{B\,\HardyTwo}
+\newcommand{\DQ}{\mathcal{D}_{Q}}
+\newcommand{\Yon}{\mathsf{y}}
+\newcommand{\RKHS}{\mathrm{RKHS}}
+\newcommand{\NoPhantom}{\mathrm{NoPhantom}}
+\newcommand{\YBDC}{\mathrm{YBDC}}
+\newcommand{\BBRDS}{\mathrm{BBRDS}}
+\newcommand{\dom}{\operatorname{dom}}
+\newcommand{\im}{\operatorname{im}}
+\newcommand{\coker}{\operatorname{coker}}
+\newcommand{\Set}{\mathbf{Set}}
+
+\title{Assembly of the Yoneda/Blaschke Detector Calculus:\\
+Target~2 of the No-Phantom Language for Classical~RH}
+
+\author{Volume~VI, Paper~06\\\textit{hott-riemann-hypothesis-vol6}}
+
+\date{2026-05-07}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Volume~V conditional theorem
+\(\mathtt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}\) reduces
+classical RH to two payload fields: an off-critical defect kernel
+(Target~1) and a Yoneda/Blaschke detector calculus (Target~2). This paper
+discharges the \emph{assembly} step of Target~2: it constructs the
+Volume~VI Lean module \(\mathtt{Vol6.YonedaBlaschkeDetectorCalculus}\)
+that consumes the four sub-targets shipped by papers~02 (detector
+completeness), 04 (rational-dilation externalization), 05A (quotient
+orthogonality), and 05B (admissibility), and packages them as the
+canonical inhabitant of \(\mathtt{BurnolBlaschkeRKHSDetectorSemantics}\).
+The assembly is a single record literal at the Lean level; the
+mathematical content is the precise specification of how the four
+sub-targets fit together. Because papers 02, 04, 05 have not yet shipped
+their principal theorems, the unconditional Target~2 theorem is currently
+gated; the precise barrier is propagated through a paired obstruction
+module \(\mathtt{Vol6.Obstruction.Yoneda\-Blaschke\-Detector\-Calculus\-%
+Obstruction}\) that lists each upstream symbol the assembly is waiting
+on. We state and prove the conditional principal theorem
+\(\mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}\), the
+composition with paper~03 yielding
+\(\mathtt{RH\_classical\_of\_subtargets\_and\_off\_critical\_kernel}\),
+and the no-axiom audit that paper~06 introduces no \(\mathtt{sorry}\),
+\(\mathtt{admit}\), new \(\mathtt{axiom}\), or new \(\mathtt{opaque}\).
+A Haskell companion verifies on a 3-zero numerical packet that the four
+sub-targets produce nonzero, mutually consistent witnesses.
+\end{abstract}
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The vol5 conditional theorem and the two payloads}
+
+The starting point of the present paper is the Volume~V theorem
+\begin{equation}
+  \label{eq:rh-classical-of-breakthrough}
+  \mathtt{RH\_classical\_of\_no\_phantom\_language\_breakthrough} : \;
+  \NoPhantom\text{-}\mathrm{Breakthrough} \to \mathrm{RH}_{\mathrm{classical}},
+\end{equation}
+in which \(\NoPhantom\text{-}\mathrm{Breakthrough}\) is a record with two
+fields:
+\begin{align*}
+  &\mathtt{detectorCalculus} : \YBDC, \\
+  &\mathtt{offCriticalKernel} : \mathtt{OffCriticalZeroDefectKernel},
+\end{align*}
+where \(\YBDC = \mathtt{YonedaBlaschkeDetectorCalculus}\) is Target~2 and
+\(\mathtt{OffCriticalZeroDefectKernel}\) is Target~1. The structure
+\(\YBDC\) wraps the canonical RKHS detector semantics
+\(\BBRDS = \mathtt{BurnolBlaschkeRKHSDetectorSemantics}\), which itself
+expands to the four-component record
+\begin{equation}
+  \label{eq:bbrds}
+  \BBRDS \;=\; \bigl(\,\mathrm{detector},\;\mathrm{rational},\;
+    \mathrm{externalization},\;\mathrm{orthogonality},\;
+    \mathrm{admissibility}\,\bigr).
+\end{equation}
+
+The Volume~VI proof sprint (paper-by-paper) is
+
+\begin{itemize}[leftmargin=2em]
+  \item Paper~01 (FiniteBlaschkePacket): finite-packet model spaces.
+  \item Paper~02 (FiniteRankDetector): detector completeness.
+  \item Paper~03 (OffCriticalDefectKernel): Target~1.
+  \item Paper~04 (RationalDilationExternalization): externalization.
+  \item Paper~05 (QuotientOrthogonalityAdmissibility): orthogonality and
+        admissibility.
+  \item \textbf{Paper~06 (YonedaBlaschkeDetectorCalculus): assembly of
+        Target~2 — the present paper.}
+  \item Paper~07 (RHClassicalNewLanguage): synthesis.
+\end{itemize}
+
+Papers 02, 04, and 05 supply the four sub-targets fed into the assembly.
+Paper~06 stitches them together. Paper~03 supplies the parallel Target~1
+payload. Paper~07 invokes \eqref{eq:rh-classical-of-breakthrough}.
+
+\subsection{Scope of the present paper}
+
+This paper contributes the \emph{assembly} of Target~2: a single Lean
+module that, given inhabitants of the four sub-targets
+\(D, R, E, Q, A\) listed in~\eqref{eq:bbrds}, returns an inhabitant of
+\(\YBDC\). The assembly is purely organizational at the level of Lean
+record literals — no new mathematics is introduced beyond
+\eqref{eq:bbrds} — but the precise type-checking is nontrivial because
+the four sub-targets live at different universe levels and interact
+through dependent types (the externalization is parameterised over the
+detector and the rational-dilation semantics).
+
+We also prove that the assembly composes correctly with paper~03 to
+deliver \(\mathrm{RH}_{\mathrm{classical}}\) once both bundles are
+inhabited (\Cref{thm:rh-classical-of-subtargets}). This is the
+single line that paper~07 will consume.
+
+\subsection{Obstruction-only delivery}
+
+At the time of writing, papers~02, 04, and 05 have not shipped their
+principal theorems. Concretely, the canonical Lean modules
+\begin{quote}
+  \(\mathtt{Vol6.FiniteRankDetector}\),\\
+  \(\mathtt{Vol6.RationalDilationExternalization}\),\\
+  \(\mathtt{Vol6.QuotientOrthogonalityAdmissibility}\)
+\end{quote}
+do not yet exist. The unconditional Target~2 theorem
+\(\mathtt{yoneda\_blaschke\_detector\_calculus} : \YBDC\) therefore cannot
+be discharged by application alone, since the antecedent
+\(\mathtt{BundledSubTargets}\) of the conditional assembly has no
+inhabitant we can name without introducing a forbidden \(\mathtt{sorry}\)
+or new \(\mathtt{axiom}\).
+
+In compliance with the worker contract, the precise barrier is recorded
+in the paired obstruction module
+\(\mathtt{Vol6.Obstruction.YonedaBlaschkeDetectorCalculusObstruction}\),
+which lists, for each of the four sub-targets, the canonical Vol6
+module, symbol name, and reason the symbol is not yet available
+(\Cref{sec:obstruction}).
+
+\subsection{Summary of contributions}
+
+\begin{itemize}
+  \item Definition of the bundled sub-target type
+        \(\mathtt{BundledSubTargets}\) that names exactly the data
+        produced by papers~02, 04, 05 (\Cref{def:bundled-subtargets}).
+  \item Proof of the conditional principal definition
+        \(\mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}
+        : \mathtt{BundledSubTargets} \to \YBDC\)
+        (\Cref{thm:assembly}).
+  \item Proof of the synthesis composition
+        \(\mathtt{RH\_classical\_of\_subtargets\_and\_off\_critical\_kernel}\)
+        (\Cref{thm:rh-classical-of-subtargets}).
+  \item A categorical recasting of the four-component assembly as a
+        record in a slice category
+        (\Cref{prop:slice-category-recast}).
+  \item No-phantom audit confirming that the assembly module introduces
+        no new \(\mathtt{sorry}\), \(\mathtt{admit}\),
+        \(\mathtt{axiom}\), or \(\mathtt{opaque}\)
+        (\Cref{sec:audit}).
+  \item A 3-zero finite-packet numerical demonstration in Haskell
+        (\Cref{sec:haskell}) verifying that the four components produce
+        nonzero, mutually consistent witnesses on a concrete instance.
+\end{itemize}
+
+\section{Mathematical Framework}
+\label{sec:mathematical-framework}
+
+This section fixes the mathematical objects participating in the
+Volume~VI assembly. All definitions correspond to existing Volume~V
+declarations; we restate them so the present paper is self-contained.
+
+\subsection{The unit disc, Hardy space, and Blaschke factor}
+
+Let \(\D = \{ z \in \C : |z| < 1\}\) denote the open unit disc. The
+Hardy space \(\HardyTwo(\D)\) consists of holomorphic functions
+\(f : \D \to \C\) with finite norm
+\[
+  \|f\|_{\HardyTwo}^{2}
+  \;=\; \sup_{0 \le r < 1} \frac{1}{2\pi} \int_{0}^{2\pi}
+        |f(re^{i\theta})|^{2}\,d\theta < \infty.
+\]
+Its reproducing kernel is the Szegő kernel
+\[
+  k_{w}(z) \;=\; \frac{1}{1 - z\overline{w}}, \qquad z, w \in \D,
+\]
+satisfying \(\langle f, k_{w}\rangle_{\HardyTwo} = f(w)\) for all
+\(f \in \HardyTwo\).
+
+A finite Blaschke product based at points
+\(w_{1},\ldots,w_{n} \in \D\) is the function
+\[
+  B_{P}(z) \;=\; \prod_{i=1}^{n} \frac{z - w_{i}}{1 - z\overline{w_{i}}},
+  \qquad P = \{w_{1},\ldots,w_{n}\}.
+\]
+The associated submodule \(\BHardy = B_{P}\,\HardyTwo \subset \HardyTwo\)
+is closed; its orthogonal complement is the Burnol/Blaschke model space
+\[
+  \KB \;=\; \HardyTwo \ominus \BHardy
+       \;=\; \HardyTwo / \BHardy,
+\]
+which is finite-dimensional of dimension \(n\) (when the \(w_{i}\) are
+distinct), with a canonical reproducing kernel basis
+\(\{k_{w_{1}},\ldots,k_{w_{n}}\}\) and Gram matrix
+\[
+  G_{ij} \;=\; \langle k_{w_{i}}, k_{w_{j}}\rangle
+            \;=\; \frac{1}{1 - w_{i}\overline{w_{j}}}.
+\]
+
+\subsection{The Yoneda category \texorpdfstring{\(\DQ\)}{D Q} and
+the Nyman kernel identification}
+
+Volume~V introduces a category \(\DQ\) of \emph{rational-dilation
+generators}, with objects (the \(\mathtt{DQObj}\) type) defined to
+coincide with \(\mathtt{NymanKernel}\) — the type of Nyman/Yoneda
+kernels indexed by rational dilations \(\theta \in \Q \cap (0, 1]\).
+The Yoneda functor
+\[
+  \Yon : \DQ \to \mathbf{PSh}(\DQ)
+\]
+is fully faithful; we write \(\Yon(X)\) for the Yoneda image of an
+object \(X\).
+
+The crucial Volume~V theorem is
+\(\mathtt{nymanObject\_surjective\_on\_DQ}\): every
+\(\mathtt{DQObj}\) is canonically isomorphic to the
+\(\mathtt{nymanObject}\) of its associated Nyman kernel. This means
+that, for the externalization in paper~04, identifying a presheaf as a
+\emph{rational-dilation representable} reduces to providing a Nyman
+kernel together with a Yoneda image.
+
+\subsection{The Burnol/Blaschke condensed Hilbert defect}
+
+Volume~V abstracts the model-space carrier into a
+\(\mathtt{BlaschkeDefectObject}\) and wraps it as a
+\(\mathtt{CondensedHilbertDefect}\). The canonical instance
+\(\mathtt{burnolBlaschkeCondensedHilbertDefect}\) packages the
+Burnol/Blaschke factor and its model space \(\KB\). Its underlying
+defect object \(\mathtt{blaschkeDefectObject}\) carries the
+\emph{model carrier} type
+\(\mathtt{burnolBlaschkeFactor.modelSpaceCarrier}\), which in vol5 is
+introduced via an \(\mathtt{axiom}\); papers~01 and~03 will give it a
+concrete realisation, but for paper~06 we treat it as the abstract
+\(\KB\) of \eqref{eq:bbrds}.
+
+\subsection{The four sub-target types}
+\label{sec:four-subtarget-types}
+
+The four sub-targets of the assembly have explicit Vol5 types:
+
+\begin{definition}[Detector component]
+\label{def:detector-component}
+A \emph{detector component} for \(\mathtt{burnolBlaschke\-Condensed\-%
+Hilbert\-Defect}\) is an inhabitant of
+\[
+  \mathrm{RKHSModelSpaceDetector}\bigl(\mathtt{burnolBlaschkeCondensedHilbertDefect}\bigr).
+\]
+This is a structure with fields \(\mathrm{Detector}\),
+\(\mathrm{detectsVector}\), \(\mathrm{vector\_of\_nonzero}\),
+\(\mathrm{detector\_complete}\), as in Volume~V's
+\(\mathtt{RKHSDetectorSemantics}\).
+\end{definition}
+
+\begin{definition}[Rational-dilation component]
+\label{def:rational-component}
+A \emph{rational-dilation component} is an inhabitant of
+\(\mathrm{RationalDilationObjectSemantics}\); it carries a
+\(\mathrm{Parameter}\) type and a map
+\(\mathrm{objectOf} : \mathrm{Parameter} \to \mathtt{DQObj}\).
+\end{definition}
+
+\begin{definition}[Externalization component]
+\label{def:externalization-component}
+Given a detector \(D\) and a rational component \(R\), an
+\emph{externalization component} is an inhabitant of
+\[
+  \mathrm{RKHSDetectorExternalizationToRationalRepresentables}
+   (\mathtt{burnolBlaschkeCondensedHilbertDefect}, D, R).
+\]
+\end{definition}
+
+\begin{definition}[Orthogonality component]
+\label{def:orthogonality-component}
+An \emph{orthogonality component} is an inhabitant of
+\[
+  \mathrm{QuotientOrthogonalityInvisibility}\bigl(
+    \mathtt{blaschkeDefectObject}\bigr).
+\]
+\end{definition}
+
+\begin{definition}[Admissibility component]
+\label{def:admissibility-component}
+An \emph{admissibility component} is an inhabitant of the proposition
+\[
+  \mathrm{BurnolBlaschkeDefectIsAdmissible} \;=\;
+  \mathrm{AdmissibleCondensedHilbertDefect}\bigl(
+    \mathtt{burnolBlaschkeCondensedHilbertDefect}\bigr),
+\]
+which is the conjunction of
+\(\mathrm{BlaschkeDefectDualizable}\),
+\(\mathrm{BlaschkeDefectPolarized}\),
+\(\mathrm{BlaschkeDefectRegularized}\) at the canonical defect object.
+\end{definition}
+
+\section{Sub-target Review}
+\label{sec:subtarget-review}
+
+This section reviews the mathematical content of each sub-target as
+delivered (or to be delivered) by papers~02, 04, 05.
+
+\subsection{Paper~02: Detector Completeness}
+\label{sec:paper02-review}
+
+Paper~02 produces a finite-rank RKHS detector for finite Blaschke
+packets and lifts it to the canonical condensed Hilbert defect.
+
+\begin{theorem}[Paper~02 principal theorem, schematic]
+\label{thm:paper02}
+There exists an inhabitant
+\[
+  \mathrm{burnol\_blaschke\_rkhs\_detector\_complete}
+  \;:\; \text{Detector component of \Cref{def:detector-component}}.
+\]
+\end{theorem}
+
+The proof in paper~02 proceeds by:
+\begin{enumerate}
+  \item Defining the finite-rank detector for a finite Blaschke packet
+        \(P = \{w_{1},\ldots,w_{n}\}\) with \(\mathrm{rank} = n\) and
+        \(\mathrm{detectsVector}\,v\,i := \langle v, k_{w_{i}}\rangle \neq 0\).
+  \item Proving completeness from Gram-matrix nondegeneracy: the
+        Pick/Gram matrix \(G_{ij} = (1 - w_{i}\overline{w_{j}})^{-1}\)
+        is positive definite when the \(w_{i}\) are distinct.
+  \item Lifting from finite packets to the canonical
+        \(\mathtt{burnolBlaschkeCondensedHilbertDefect}\) via the
+        embedding \(\mathtt{rkhs\_detector\_semantics\_of\_finite\_rank}\)
+        of Volume~V.
+\end{enumerate}
+
+\subsection{Paper~04: Rational-Dilation Externalization}
+\label{sec:paper04-review}
+
+Paper~04 produces the rational-dilation semantics and the
+externalization map.
+
+\begin{theorem}[Paper~04 principal theorem, schematic]
+\label{thm:paper04}
+There exist inhabitants
+\begin{align*}
+  \mathrm{canonicalRationalDilationSemantics}
+   &\;:\; \text{Rational component of \Cref{def:rational-component}}, \\
+  \mathrm{burnol\_blaschke\_detector\_externalization}
+   &\;:\; \text{Externalization component of \Cref{def:externalization-component}},
+\end{align*}
+where the externalization is over the canonical detector of
+\Cref{thm:paper02}.
+\end{theorem}
+
+The proof in paper~04 proceeds by:
+\begin{enumerate}
+  \item Setting \(\mathrm{Parameter} = \mathrm{RationalDilationParameter}\)
+        and \(\mathrm{objectOf}(\theta)\) the Nyman kernel at \(\theta\).
+  \item For each detector index \(i\), choosing the rational parameter
+        \(\theta_{i}\) approximating the packet zero \(w_{i}\) and the
+        Yoneda presheaf \(\Yon(\mathrm{objectOf}(\theta_{i}))\).
+  \item Proving \(\mathrm{presheaf\_eq}\) by definitional unfolding using
+        \(\DQ = \mathtt{NymanKernel}\).
+  \item Proving \(\mathrm{detected\_of\_detector}\) through the
+        Volume~V opaque
+        \(\mathrm{DefectDetectedByRationalDilationRepresentable}\) and
+        the transparent characterization shipped by
+        \(\mathrm{Frac\-tio\-nal\-Part\-Externalization\-Trans\-parent\-Pa\-cka\-ge}\).
+\end{enumerate}
+
+\subsection{Paper~05A: Quotient Orthogonality}
+\label{sec:paper05a-review}
+
+Paper~05A produces the orthogonality witness by cokernel construction.
+
+\begin{theorem}[Paper~05A principal theorem, schematic]
+\label{thm:paper05a}
+There exists an inhabitant
+\[
+  \mathrm{burnol\_blaschke\_quotient\_orthogonality}
+  \;:\; \text{Orthogonality component of \Cref{def:orthogonality-component}}.
+\]
+\end{theorem}
+
+The proof in paper~05A proceeds by:
+\begin{enumerate}
+  \item Defining
+        \(\mathrm{OrthogonalToRepresentable}(F) := \forall v \in \KB,
+        \langle v, \pi(F)\rangle = 0\), where \(\pi\) is the
+        Yoneda-image realization.
+  \item Proving \(\mathrm{orthogonal\_of\_yoneda\_image}\) because
+        Yoneda images lie in \(\BHardy\) by construction (cokernel
+        semantics, not Nyman density).
+  \item Proving \(\mathrm{no\_detection\_of\_orthogonal}\) since
+        detection requires a nonzero inner product.
+\end{enumerate}
+
+\subsection{Paper~05B: Admissibility}
+\label{sec:paper05b-review}
+
+Paper~05B produces inhabitants of the three opaque admissibility atoms.
+
+\begin{theorem}[Paper~05B principal theorem, schematic]
+\label{thm:paper05b}
+There exists an inhabitant
+\[
+  \mathrm{burnol\_blaschke\_defect\_is\_admissible}
+  \;:\; \text{Admissibility component of \Cref{def:admissibility-component}}.
+\]
+\end{theorem}
+
+The proof in paper~05B proceeds by:
+\begin{enumerate}
+  \item Proving finite-rank admissibility for finite Blaschke packets:
+        dualizability is finite-rank Hilbert-module duality;
+        polarization is the Hardy inner-product polarization identity
+        on \(\KB\); regularization is via resolvent-family convergence.
+  \item Lifting to the canonical condensed Hilbert defect through the
+        regularized passage (not raw operator-norm convergence).
+\end{enumerate}
+
+\section{The Assembly}
+\label{sec:assembly}
+
+\subsection{The bundled sub-target type}
+
+The four sub-target types (\Cref{def:detector-component}--\Cref{def:%
+admissibility-component}) live at different universe levels and the
+externalization depends on the detector and rational components.
+We package them as a single record so the principal definition takes
+one named hypothesis.
+
+\begin{definition}[Bundled sub-targets]
+\label{def:bundled-subtargets}
+The Lean type \(\mathtt{BundledSubTargets}\) is the record
+\begin{align*}
+  \mathtt{BundledSubTargets}
+    &= \bigl(\,\mathrm{detector},\;\mathrm{rational},\;
+              \mathrm{externalization},\;\mathrm{orthogonality},\;
+              \mathrm{admissibility}\,\bigr),
+\end{align*}
+where the field types are the five \(\mathrm{Burnol\-Blaschke\-{*}\-Component}\)
+abbreviations of \Cref{sec:four-subtarget-types}, with
+\(\mathrm{externalization}\) dependent on \(\mathrm{detector}\) and
+\(\mathrm{rational}\).
+\end{definition}
+
+\begin{remark}
+\label{rem:dependent-types}
+The dependent typing
+\(\mathrm{externalization} : \mathrm{Burnol\-Blaschke\-Externalization\-%
+Component}(\mathrm{detector}, \mathrm{rational})\) is essential. If we
+flattened the bundle into five independent fields we could not
+type-check the assembly: the externalization is a structure that
+\emph{names} the detector and rational components in its type, so any
+later replacement of either component would invalidate the
+externalization witness.
+\end{remark}
+
+\subsection{The assembly map}
+
+\begin{theorem}[Assembly]
+\label{thm:assembly}
+There is a Lean-definable map
+\[
+  \mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}
+  \;:\; \mathtt{BundledSubTargets} \to \YBDC
+\]
+sending a bundled inhabitant \(B\) to the record literal
+\[
+  B \mapsto
+   \bigl\{\,\mathrm{rkhs} \;:=\; \bigl\{\, B.\mathrm{detector},
+          B.\mathrm{rational}, B.\mathrm{externalization},
+          B.\mathrm{orthogonality}, B.\mathrm{admissibility}\,\bigr\}\,\bigr\}.
+\]
+The construction introduces no \(\mathtt{sorry}\), \(\mathtt{admit}\),
+new \(\mathtt{axiom}\), or new \(\mathtt{opaque}\).
+\end{theorem}
+
+\begin{proof}
+We exhibit the term of type \(\YBDC\) directly. Given
+\(B : \mathtt{BundledSubTargets}\), the record literal
+\[
+  R \;:=\; \bigl\{\;
+    \mathrm{detector}        := B.\mathrm{detector},\;
+    \mathrm{rational}        := B.\mathrm{rational},\;
+    \mathrm{externalization} := B.\mathrm{externalization},\;
+    \mathrm{orthogonality}   := B.\mathrm{orthogonality},\;
+    \mathrm{admissibility}   := B.\mathrm{admissibility}\;
+  \bigr\}
+\]
+type-checks against \(\BBRDS\) by inspection of the Volume~V definition
+of \(\mathrm{ConcreteRKHSDetectorSemantics}\). Since
+\(\BBRDS = \mathrm{ConcreteRKHSDetectorSemantics}\bigl(
+\mathtt{burnolBlaschke\-Condensed\-Hilbert\-Defect}\bigr)\) and
+\(\YBDC = \{\,\mathrm{rkhs} : \BBRDS\,\}\), the wrapper
+\(\{\mathrm{rkhs} := R\}\) inhabits \(\YBDC\). The Lean elaborator
+verifies the dependent type alignment of \(\mathrm{externalization}\)
+because both occurrences of \(\mathrm{detector}\) and
+\(\mathrm{rational}\) come from the same record \(B\), so the
+externalization's parameter types match the assembly's fields up to
+syntactic identity.
+
+No \(\mathtt{sorry}\), \(\mathtt{admit}\), or new \(\mathtt{axiom}\) is
+used in the term. The construction is closed under definitional
+equality alone.
+\end{proof}
+
+\subsection{Categorical recasting}
+
+The assembly admits a clean categorical reading.
+
+\begin{proposition}[Slice category recasting]
+\label{prop:slice-category-recast}
+Let \(\mathcal{T}\) be the type-theoretic category of Lean types and
+type-preserving maps. The map
+\(\mathrm{assembleYoneda\-Blaschke\-Detector\-Calculus}\) of
+\Cref{thm:assembly} is the canonical evaluation morphism in the slice
+category
+\[
+  \mathcal{T} / \YBDC,
+\]
+sending the data tuple \(B\) to the record-literal evaluation of
+\(\YBDC\) at \(B\). Equivalently, the assembly is the unique
+factorisation of the structure projection
+\(\YBDC \to (\BBRDS \text{-fields})\) through the bundle type
+\(\mathtt{BundledSubTargets}\).
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The Volume~V definition of \(\YBDC\) and \(\BBRDS\) presents both as
+non-dependent records (the externalization field's dependent typing is
+discharged inside the record). The slice over \(\YBDC\) has objects
+\((X, f : X \to \YBDC)\); the bundle type and its assembly map form
+such an object. Uniqueness of the factorisation follows from the
+universal property of records: any map into \(\YBDC\) factors uniquely
+through its field types. \qedhere
+\end{proof}
+
+\section{Composition with Paper~03 to Recover \texorpdfstring{$\mathrm{RH}_{\mathrm{classical}}$}{RH classical}}
+\label{sec:rh-classical}
+
+\subsection{Paper~03 in one line}
+
+Paper~03 (Target~1) discharges
+\begin{equation}
+  \label{eq:paper03}
+  \mathtt{off\_critical\_zero\_defect\_kernel}
+   \;:\; \mathtt{OffCriticalZeroDefectKernel}.
+\end{equation}
+This is a \(\mathrm{Prop}\)-valued statement that any off-critical
+\(\zeta\) zero produces a nonempty model carrier
+\(\mathtt{burnolBlaschkeFactor.modelSpaceCarrier}\), constructed
+through the single-point Blaschke packet of paper~01.
+
+\subsection{The synthesis composition}
+
+\begin{theorem}[\(\mathrm{RH}_{\mathrm{classical}}\) from sub-targets and Target~1]
+\label{thm:rh-classical-of-subtargets}
+Given a bundled sub-target witness
+\(B : \mathtt{BundledSubTargets}\) and a Target~1 witness
+\(K : \mathtt{OffCriticalZeroDefectKernel}\), classical RH is provable:
+\[
+  \mathtt{RH\_classical\_of\_subtargets\_and\_off\_critical\_kernel}
+  : \mathtt{BundledSubTargets} \to \mathtt{OffCriticalZeroDefectKernel}
+    \to \mathrm{RH}_{\mathrm{classical}}.
+\]
+\end{theorem}
+
+\begin{proof}
+By \Cref{thm:assembly}, \(B\) yields
+\(\mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}(B)
+: \YBDC\). Together with \(K\), this populates the
+\(\mathtt{NoPhantomLanguageBreakthrough}\) record:
+\[
+  \bigl\{\,\mathrm{detectorCalculus} :=
+   \mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}(B),
+   \;\;\mathrm{offCriticalKernel} := K \,\bigr\}.
+\]
+Apply the Volume~V master theorem
+\eqref{eq:rh-classical-of-breakthrough} to obtain
+\(\mathrm{RH}_{\mathrm{classical}}\). \qedhere
+\end{proof}
+
+\Cref{thm:rh-classical-of-subtargets} is the single line that paper~07
+will consume once papers~02--05 are theorem-closed.
+
+\subsection{Compositional diagram}
+
+The Volume~VI flow is summarised by the composition
+\[
+  \mathtt{BundledSubTargets}
+  \;\xrightarrow{\text{paper 06}}\; \YBDC
+  \;\xrightarrow{\text{paper 07 wrap}}\; \mathtt{NoPhantomLanguageBreakthrough}
+  \;\xrightarrow{\text{vol5 master}}\; \mathrm{RH}_{\mathrm{classical}}.
+\]
+The vertical arrow ``vol5 master'' is the conditional theorem
+\eqref{eq:rh-classical-of-breakthrough}, already proven in Volume~V.
+The diagonal arrow is \Cref{thm:rh-classical-of-subtargets}.
+
+\section{The Obstruction Module}
+\label{sec:obstruction}
+
+\subsection{Why an obstruction is needed}
+
+If papers~02, 04, 05 had shipped their principal theorems, paper~06
+would deliver the unconditional theorem
+\(\mathtt{yoneda\_blaschke\_detector\_calculus} : \YBDC\) by
+\Cref{thm:assembly} applied to the canonical bundle
+\[
+  B_{\text{canonical}} :=
+   \bigl\{\,\mathrm{detector} :=
+     \mathtt{burnol\_blaschke\_rkhs\_detector\_complete},\;\ldots\,\bigr\}.
+\]
+Because those papers have not yet shipped, no such canonical bundle
+can be named. We are forbidden from introducing a new
+\(\mathtt{axiom}\) or \(\mathtt{sorry}\) to fake one, so the
+unconditional theorem cannot be discharged in paper~06. Instead,
+paper~06 ships:
+\begin{itemize}
+  \item the conditional principal definition
+        (\Cref{thm:assembly}),
+  \item the synthesis composition
+        (\Cref{thm:rh-classical-of-subtargets}),
+  \item a paired obstruction module that records the precise barrier.
+\end{itemize}
+
+\subsection{Structure of the obstruction module}
+
+The obstruction module
+\(\mathtt{Vol6.Obstruction.Yoneda\-Blaschke\-Detector\-Calculus\-%
+Obstruction}\) defines:
+
+\begin{enumerate}
+  \item An inductive \(\mathtt{UpstreamPaper}\) with three constructors
+        for papers~02, 04, 05.
+  \item A structure \(\mathtt{UpstreamBarrier}\) recording
+        \(\mathrm{paper}\), \(\mathrm{module}\), \(\mathrm{symbol}\),
+        \(\mathrm{reason}\) as \(\mathtt{String}\) data.
+  \item A structure \(\mathtt{DetectorCalculusBarrier}\) with one
+        \(\mathtt{UpstreamBarrier}\) per sub-target.
+  \item A canonical inhabitant
+        \(\mathtt{yoneda\_blaschke\_detector\_calculus\_obstruction}
+        : \mathtt{DetectorCalculusBarrier}\) whose four fields name
+        exactly the symbols
+        \(\mathtt{burnol\_blaschke\_rkhs\_detector\_complete}\),
+        \(\mathtt{burnol\_blaschke\_detector\_externalization}\),
+        \(\mathtt{burnol\_blaschke\_quotient\_orthogonality}\),
+        \(\mathtt{burnol\_blaschke\_defect\_is\_admissible}\) and
+        the reason each is unavailable.
+  \item Two sanity lemmas, \(\mathtt{obstruction\_has\_four\_components}\)
+        and \(\mathtt{blocking\_papers\_are\_02\_04\_05}\), proved by
+        \(\mathtt{rfl}\).
+\end{enumerate}
+
+The obstruction module is plain \(\Pi\)-typed data; it introduces no
+new \(\mathtt{axiom}\) or \(\mathtt{opaque}\). It builds and links
+without depending on Volume~V (it has no \(\mathtt{import}\) statements
+beyond Lean core).
+
+\subsection{Propagation contract}
+
+The contract paper~06 honours is:
+
+\begin{quote}
+\itshape
+If papers~02/04/05 ship their principal theorems, the assembly produces
+the unconditional Target~2 theorem by application of
+\Cref{thm:assembly}. If any of those papers ships only an obstruction,
+paper~06 propagates the precise barrier through the paired obstruction
+module without introducing forbidden symbols.
+\end{quote}
+
+The current state of vol6 (no paper~02/04/05 modules) places paper~06
+in the second arm of this disjunction.
+
+\section{No-Phantom Audit}
+\label{sec:audit}
+
+\subsection{Forbidden-symbol scan}
+
+The Lean module \(\mathtt{Vol6.Yoneda\-Blaschke\-Detector\-Calculus}\)
+together with its paired
+\(\mathtt{Vol6.Obstruction.Yoneda\-Blaschke\-Detector\-Calculus\-%
+Obstruction}\) was scanned for the forbidden symbols
+\(\mathtt{sorry}\), \(\mathtt{admit}\), \(\mathtt{axiom}\) (introducing
+a new axiom), \(\mathtt{opaque}\) (introducing a new opaque
+declaration). The only matches are inside doc-comment strings or
+\(\mathtt{String}\) literals describing the contract. No
+declaration-level use occurs.
+
+\subsection{Compliance with vol5 hard rules}
+
+\begin{itemize}
+  \item No import of \(\mathtt{Vol5.YonedaNymanTrackA.BurnolFactorization}\).
+  \item No import of \(\mathtt{Vol5.YonedaNymanTrackA.Criterion}\).
+  \item No use of \(\mathrm{NymanDensity}\).
+  \item No use of any Beurling--Nyman equivalence.
+  \item No use of \(\mathrm{InternalBlaschkeTriviality}\) as an
+        assumption.
+  \item No assumption of \(\mathrm{RH}_{\mathrm{classical}}\) or any
+        proposition equivalent to it.
+\end{itemize}
+
+\subsection{Build status}
+
+\(\mathtt{lake\;build\;Vol6.YonedaBlaschkeDetectorCalculus}\) succeeds
+with exit code \(0\) under the project's lakefile, against the
+imported Volume~V package.
+
+\section{Worked Example: A 3-Zero Packet}
+\label{sec:haskell}
+
+\subsection{Specification}
+
+To exercise the assembly numerically we instantiate the four
+sub-targets on a 3-zero finite Blaschke packet
+\[
+  P \;=\; \{ w_{1}, w_{2}, w_{3} \}
+       \;=\; \{ 0.30 + 0.20\,i,\; 0.10 - 0.40\,i,\; -0.25 + 0.15\,i \}.
+\]
+We compute, in Haskell:
+
+\begin{enumerate}
+  \item Paper~02 surrogate: detector values
+        \(\langle e_{i}, k_{w_{i}}\rangle\) on the canonical kernel
+        basis \(e_{1}, e_{2}, e_{3}\), expected nonzero.
+  \item Paper~04 surrogate: rational parameters
+        \(\theta_{i} \approx |w_{i}|\) and presheaves
+        \(\Yon(\mathrm{objectOf}(\theta_{i}))\).
+  \item Paper~05A surrogate: orthogonality witnesses
+        \(\langle e_{i}, F_{i}\rangle\) with \(F_{i} =
+        \pi(\Yon(\mathrm{objectOf}(\theta_{i})))\), expected zero by
+        cokernel construction.
+  \item Paper~05B surrogate: numerical certificates of dualizability,
+        polarization, and regularization derived from the Gram matrix.
+\end{enumerate}
+
+\subsection{Output}
+
+The Haskell program prints the four witness lists and a consistency
+report. On the example packet the report is:
+
+\begin{verbatim}
+detector all nonzero       : True
+detector min |value|       : 1.0928961748633879
+externalization consistent : True
+orthogonality vanishes     : True
+orthogonality max |value|  : 0.0
+admissibility all OK       : True
+RESULT: PASS
+\end{verbatim}
+
+\subsection{Interpretation}
+
+The four numerical sub-targets are mutually consistent on the example:
+the detector functionals produce diagonal Gram-matrix values bounded
+below away from zero (paper~02), the externalization presheaves carry
+the same packet indices as the detector (paper~04), the
+orthogonality witnesses vanish exactly (paper~05A, by the Blaschke
+factor vanishing at packet zeros), and the three admissibility atoms
+yield positive certificates (paper~05B). This is the numerical analogue
+of \Cref{thm:assembly} for a concrete 3-zero packet.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Principal Lean theorems}
+
+\begin{itemize}
+  \item \(\mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}
+        : \mathtt{BundledSubTargets} \to \YBDC\)
+        (\Cref{thm:assembly}).
+  \item \(\mathtt{RH\_classical\_of\_subtargets\_and\_off\_critical\_kernel}
+        : \mathtt{BundledSubTargets} \to \mathtt{OffCriticalZeroDefectKernel}
+        \to \mathrm{RH}_{\mathrm{classical}}\)
+        (\Cref{thm:rh-classical-of-subtargets}).
+\end{itemize}
+
+\subsection{Status of the unconditional principal theorem}
+
+The unconditional
+\(\mathtt{yoneda\_blaschke\_detector\_calculus} : \YBDC\) is gated on
+papers~02, 04, 05; the obstruction is recorded in
+\(\mathtt{Vol6.Obstruction.Yoneda\-Blaschke\-Detector\-Calculus\-%
+Obstruction}\).
+
+\subsection{Audit results}
+
+No \(\mathtt{sorry}\), \(\mathtt{admit}\), new \(\mathtt{axiom}\), or
+new \(\mathtt{opaque}\) is introduced; no Nyman density or
+Beurling--Nyman equivalence is invoked; no RH-equivalent is assumed.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why the assembly is mathematically uneventful but logistically essential}
+
+The assembly proper introduces no new mathematics: it is a single
+record literal whose fields are the four sub-targets. The mathematical
+content lives entirely in papers~02, 04, 05. Nevertheless the assembly
+step is logistically essential because it locks in the type alignment
+of the four sub-targets at the Burnol/Blaschke condensed Hilbert defect.
+A subtle universe-level error in any sub-target type would surface here
+and force a redesign of the upstream paper. Concretely, during the
+construction of \(\mathtt{Vol6.Yoneda\-Blaschke\-Detector\-Calculus}\)
+we encountered three universe alignment errors that required adjusting
+the bundled type abbreviations; each error pointed to a specific
+expected-versus-actual universe of an upstream component. These errors
+are surfaced \emph{at assembly time}, which is exactly what one wants
+from a sprint where the upstream papers are still in flight.
+
+\subsection{Comparison with the finite-rank version of vol5}
+
+Volume~V already provides the finite-rank embedding
+\(\mathtt{rkhs\_detector\_semantics\_of\_finite\_rank}\), which converts
+a finite-rank RKHS detector semantics into a general one. Paper~06
+sits one layer above this: the four sub-targets are already
+``general'' (in the sense of \(\mathrm{RKHSModelSpaceDetector}\), not
+\(\mathrm{Finite\-Model\-Space\-Detector}\)) by the time they arrive
+at paper~06. The finite-rank embedding is internalised inside paper~02.
+Paper~06's assembly therefore consumes only general-detector data and
+does not duplicate the embedding.
+
+\subsection{The role of paper~03}
+
+Paper~03 is parallel to papers~02--06 in the sense that its sub-target
+type \(\mathtt{OffCriticalZeroDefectKernel}\) does not feed into the
+assembly of paper~06. Both Targets~1 and~2 must be inhabited
+independently for paper~07 to invoke the Volume~V master theorem. The
+composition lemma \Cref{thm:rh-classical-of-subtargets} is paper~06's
+contribution to the synthesis: paper~07 will simply apply
+\Cref{thm:rh-classical-of-subtargets} once both bundles are inhabited.
+
+\subsection{Robustness to changes in the upstream sub-target types}
+
+Suppose paper~04 changes the field name
+\(\mathrm{parameterOf}\) of
+\(\mathrm{RKHSDetectorExternalizationToRationalRepresentables}\). The
+assembly of paper~06 references that field only through the
+externalization component (which is treated as an opaque inhabitant of
+its type), so any rename is absorbed by the upstream paper without
+breaking the assembly. The only fragile point is the structure
+signature of \(\mathrm{ConcreteRKHSDetectorSemantics}\) itself; if
+Volume~V renames a field, paper~06 must be re-elaborated. Since
+Volume~V is read-only and frozen at the present commit, this is not a
+concern for the current sprint.
+
+\subsection{Future-proofing for paper~07}
+
+When paper~07 is written, it will simply chain
+\Cref{thm:rh-classical-of-subtargets} with the canonical
+\(\mathtt{BundledSubTargets}\) inhabitant produced by papers~02--05
+and the canonical \(\mathtt{OffCriticalZeroDefectKernel}\) inhabitant
+produced by paper~03. No further work is needed in paper~06 for
+paper~07 to compile.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have constructed the Volume~VI Lean module
+\(\mathtt{Vol6.YonedaBlaschkeDetectorCalculus}\) that assembles the
+four sub-targets of papers~02, 04, 05 into the canonical
+\(\mathtt{BurnolBlaschkeRKHSDetectorSemantics}\) and hence into
+\(\mathtt{YonedaBlaschkeDetectorCalculus}\). The principal definition
+\(\mathtt{yoneda\_blaschke\_detector\_calculus\_of\_subtargets}\) is
+proved unconditionally on a bundled sub-target type
+\(\mathtt{BundledSubTargets}\); the unconditional principal theorem is
+gated on papers~02, 04, 05 and propagated through a paired obstruction
+module. The composition with paper~03 yields a one-line synthesis
+lemma \(\mathtt{RH\_classical\_of\_subtargets\_and\_off\_critical\_kernel}\)
+that paper~07 will invoke. A 3-zero numerical instance verifies that
+the four sub-targets produce nonzero, mutually consistent witnesses on
+a concrete packet. The assembly module respects every hard rule of the
+worker contract: no \(\mathtt{sorry}\), \(\mathtt{admit}\), new
+\(\mathtt{axiom}\), or new \(\mathtt{opaque}\); no Nyman density,
+Beurling--Nyman, or RH-equivalent is invoked.
+
+\appendix
+
+\section{Lean Module Listing (excerpts)}
+\label{app:lean-listing}
+
+The full module \(\mathtt{Vol6.Yoneda\-Blaschke\-Detector\-Calculus}\)
+consists of (i) the imports, (ii) the five
+\(\mathrm{Burnol\-Blaschke\-{*}\-Component}\) abbreviations,
+(iii) the bundled-type \(\mathtt{BundledSubTargets}\),
+(iv) the assembly map, (v) the conditional principal definition,
+(vi) the composition lemma, and (vii) the audit string. We reproduce
+the key declarations:
+
+\begin{verbatim}
+abbrev BurnolBlaschkeDetectorComponent : Type 1 :=
+  RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect
+
+abbrev BurnolBlaschkeRationalDilationComponent : Type 1 :=
+  RationalDilationObjectSemantics
+
+abbrev BurnolBlaschkeExternalizationComponent
+    (detector : BurnolBlaschkeDetectorComponent)
+    (rational : BurnolBlaschkeRationalDilationComponent) : Type 1 :=
+  RKHSDetectorExternalizationToRationalRepresentables
+    burnolBlaschkeCondensedHilbertDefect detector rational
+
+abbrev BurnolBlaschkeOrthogonalityComponent : Type 1 :=
+  QuotientOrthogonalityInvisibility blaschkeDefectObject
+
+abbrev BurnolBlaschkeAdmissibilityComponent : Prop :=
+  BurnolBlaschkeDefectIsAdmissible
+
+structure BundledSubTargets : Type 1 where
+  detector       : BurnolBlaschkeDetectorComponent
+  rational       : BurnolBlaschkeRationalDilationComponent
+  externalization : BurnolBlaschkeExternalizationComponent
+                      detector rational
+  orthogonality  : BurnolBlaschkeOrthogonalityComponent
+  admissibility  : BurnolBlaschkeAdmissibilityComponent
+
+def assembleYonedaBlaschkeDetectorCalculus
+    (B : BundledSubTargets) :
+    YonedaBlaschkeDetectorCalculus where
+  rkhs := assembleRKHSDetectorSemantics B
+
+def yoneda_blaschke_detector_calculus_of_subtargets
+    (B : BundledSubTargets) :
+    YonedaBlaschkeDetectorCalculus :=
+  assembleYonedaBlaschkeDetectorCalculus B
+
+theorem RH_classical_of_subtargets_and_off_critical_kernel
+    (B : BundledSubTargets)
+    (K : OffCriticalZeroDefectKernel) :
+    Vol5.V5aTrackAFormulation.RH_classical :=
+  RH_classical_of_no_phantom_language_breakthrough
+    { detectorCalculus := assembleYonedaBlaschkeDetectorCalculus B
+      offCriticalKernel := K }
+\end{verbatim}
+
+\section{Obstruction Module Listing (excerpts)}
+\label{app:obstruction-listing}
+
+\begin{verbatim}
+inductive UpstreamPaper : Type
+  | finiteRankDetector
+  | rationalDilationExternalization
+  | quotientOrthogonalityAdmissibility
+  deriving DecidableEq, Repr
+
+structure UpstreamBarrier where
+  paper  : UpstreamPaper
+  module : String
+  symbol : String
+  reason : String
+  deriving Repr
+
+structure DetectorCalculusBarrier where
+  detectorCompleteness : UpstreamBarrier
+  externalization      : UpstreamBarrier
+  orthogonality        : UpstreamBarrier
+  admissibility        : UpstreamBarrier
+  deriving Repr
+
+def yonedaBlaschkeDetectorCalculusObstruction :
+    DetectorCalculusBarrier where
+  detectorCompleteness :=
+    { paper  := UpstreamPaper.finiteRankDetector
+      module := "Vol6.FiniteRankDetector"
+      symbol := "burnol_blaschke_rkhs_detector_complete"
+      reason := "..." }
+  externalization :=
+    { paper  := UpstreamPaper.rationalDilationExternalization
+      module := "Vol6.RationalDilationExternalization"
+      symbol := "burnol_blaschke_detector_externalization"
+      reason := "..." }
+  orthogonality :=
+    { paper  := UpstreamPaper.quotientOrthogonalityAdmissibility
+      module := "Vol6.QuotientOrthogonalityAdmissibility"
+      symbol := "burnol_blaschke_quotient_orthogonality"
+      reason := "..." }
+  admissibility :=
+    { paper  := UpstreamPaper.quotientOrthogonalityAdmissibility
+      module := "Vol6.QuotientOrthogonalityAdmissibility"
+      symbol := "burnol_blaschke_defect_is_admissible"
+      reason := "..." }
+
+theorem obstruction_has_four_components :
+    let O := yonedaBlaschkeDetectorCalculusObstruction
+    [O.detectorCompleteness.module, O.externalization.module,
+     O.orthogonality.module, O.admissibility.module].length = 4 := by
+  rfl
+\end{verbatim}
+
+\section{Haskell Demonstration (excerpt)}
+\label{app:haskell-listing}
+
+\begin{verbatim}
+data DetectorCalculusBundle = DetectorCalculusBundle
+  { bundleDetector       :: ![(DetectorIndex, Complex Double)]
+  , bundleExternalization :: ![(DetectorIndex, Presheaf)]
+  , bundleOrthogonality  :: ![(DetectorIndex, Complex Double)]
+  , bundleAdmissibility  :: !AdmissibilityWitness
+  } deriving Show
+
+assembleBundle :: Packet -> DetectorCalculusBundle
+assembleBundle pkt = DetectorCalculusBundle
+  { bundleDetector       = paper02Witnesses pkt
+  , bundleExternalization = paper04Witnesses pkt
+  , bundleOrthogonality  = paper05aWitnesses pkt
+  , bundleAdmissibility  = paper05bWitness  pkt
+  }
+
+main :: IO ()
+main = do
+  let pkt = threeZeroPacket
+      rpt = runCheck pkt
+  ...
+  if detectorAllNonzero rpt
+       && externalizationConsistent_ rpt
+       && orthogonalityAllZero rpt
+       && admissibilityAllOK rpt
+    then exitSuccess
+    else exitFailure
+\end{verbatim}
+
+\section{References}
+\label{sec:references}
+
+\begin{thebibliography}{9}
+
+\bibitem{vol5-no-phantom}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.NoPhantomLanguage}\), declarations
+\(\mathtt{NoPhantomLanguageBreakthrough}\),
+\(\mathtt{Yoneda\-Blaschke\-Detector\-Calculus}\),
+\(\mathtt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}\).
+
+\bibitem{vol5-rkhs}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.RKHSDetectorSemantics}\), declarations
+\(\mathtt{Concrete\-RKHS\-Detector\-Semantics}\),
+\(\mathtt{Burnol\-Blaschke\-RKHS\-Detector\-Semantics}\),
+\(\mathtt{rkhs\_detector\_semantics\_of\_finite\_rank}\).
+
+\bibitem{vol5-finite}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.FiniteRankRKHSDetector}\), declarations
+\(\mathtt{Finite\-Model\-Space\-Detector}\),
+\(\mathtt{Detector\-Externalization\-To\-Rational\-Representables}\),
+\(\mathtt{Quotient\-Orthogonality\-Invisibility}\),
+\(\mathtt{Finite\-Rank\-Model\-Space\-Admissibility}\).
+
+\bibitem{vol5-condensed}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.CondensedHilbertDefect}\), declarations
+\(\mathtt{CondensedHilbertDefect}\),
+\(\mathtt{burnolBlaschkeCondensedHilbertDefect}\),
+\(\mathtt{AdmissibleCondensedHilbertDefect}\),
+\(\mathtt{BurnolBlaschkeDefectIsAdmissible}\).
+
+\bibitem{vol5-yoneda}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.YonedaCore}\), declarations
+\(\mathtt{DQObj}\), \(\mathtt{NymanKernel}\),
+\(\mathtt{nymanObject\_surjective\_on\_DQ}\), \(\mathtt{yoneda}\).
+
+\bibitem{vol5-no-phantom-blaschke}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.NoPhantomBlaschkeDefect}\), declarations
+\(\mathtt{Blaschke\-Defect\-Dualizable}\),
+\(\mathtt{Blaschke\-Defect\-Polarized}\),
+\(\mathtt{Blaschke\-Defect\-Regularized}\),
+\(\mathtt{Blaschke\-Defect\-Admissible}\),
+\(\mathtt{DefectDetectedByRationalDilationRepresentable}\).
+
+\bibitem{vol5-fractional-part}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.FractionalPartExternalization}\),
+declarations \(\mathtt{Rational\-Dilation\-Parameter}\),
+\(\mathtt{Fractional\-Part\-Externalization\-Trans\-parent\-Pa\-cka\-ge}\).
+
+\bibitem{vol5-off-critical}
+Volume~V Lean module
+\(\mathtt{Vol5.YonedaNymanTrackA.OffCriticalZeroDefect}\), declarations
+\(\mathtt{OffCriticalZero}\), \(\mathtt{ExistsOffCriticalZero}\),
+\(\mathtt{OffCriticalZeroDefectKernel}\).
+
+\bibitem{vol5-track-a}
+Volume~V Lean module
+\(\mathtt{Vol5.V5aTrackAFormulation.TrackAFormulation}\), declarations
+\(\mathrm{RH}_{\mathrm{classical}}\), \(\mathtt{riemannZeta}\).
+
+\bibitem{vol5-next-steps}
+Volume~V \(\mathtt{sources/next\text{-}steps.md}\),
+\(\S\)``Target~2: YonedaBlaschkeDetectorCalculus'' and
+\(\S\)``Recommended Proof Sprint Order'' item~6.
+
+\bibitem{vol6-knowledge-base}
+Volume~VI \(\mathtt{.knowledge\text{-}base.md}\), Sections 2.5--2.9
+(canonical Lean signatures), 4 (paper specs 02--06), and 8 (risk
+flags).
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,53 @@
+\contentsline {section}{\numberline {1}Introduction}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Motivation: the No-Phantom Language program}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}What externalization means}{3}{subsection.1.2}%
+\contentsline {paragraph}{Internal picture (RKHS detector).}{3}{section*.2}%
+\contentsline {paragraph}{External picture (rational-dilation representable).}{4}{section*.3}%
+\contentsline {subsection}{\numberline {1.3}Outline of the paper}{4}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Hard rules}{4}{subsection.1.4}%
+\contentsline {section}{\numberline {2}Mathematical Framework}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The rational-dilation test category $D_{Q}$}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Yoneda presheaves on $D_{Q}$}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}The Burnol/Blaschke defect object}{6}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Fractional-part kernels and the Mellin picture}{6}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}The kernel evaluation functional in Hardy coordinates}{7}{subsection.2.5}%
+\contentsline {section}{\numberline {3}The Externalization Functor}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The general RKHS detector externalization structure}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Worked example: a one-element packet}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Categorical structure: presheaves on $D_{Q}$}{9}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Conditional externalization theorem}{9}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Trivial-detector externalization theorem}{10}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}The principal theorem and its conditional form}{11}{subsection.3.6}%
+\contentsline {section}{\numberline {4}The Externalization Obstruction}{11}{section.4}%
+\contentsline {subsection}{\numberline {4.1}The opaque predicate}{11}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Survey of the vol5 surface}{11}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Characterization of the missing rule}{12}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Comparison with the finite-rank detector externalization}{12}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}The opaque predicate's logical role}{13}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Why the trivial detector evades the obstruction}{13}{subsection.4.6}%
+\contentsline {section}{\numberline {5}Lean Formalization}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Module structure}{13}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Imports}{14}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Key definitions}{14}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}The principal theorem in Lean}{14}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}The unconditional inhabitant}{15}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}No-axiom, no-sorry, no-opaque verification}{15}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Audit Trail}{15}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Forbidden imports}{15}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Axioms inherited from vol5}{16}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Status string}{16}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Numerical Demonstration}{16}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Algorithm}{16}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Implementation in Haskell}{17}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Sample output}{17}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Results}{18}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Formal results}{18}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Numerical results}{18}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Discussion}{18}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Position in the Vol6 sprint}{18}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}What this paper does and does not prove}{18}{subsection.9.2}%
+\contentsline {paragraph}{Proved.}{18}{section*.4}%
+\contentsline {paragraph}{Not proved (intentionally deferred to vol5 surface extension).}{19}{section*.5}%
+\contentsline {subsection}{\numberline {9.3}Path forward}{19}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Relationship to classical Beurling--Nyman}{19}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Conclusion}{19}{section.10}%

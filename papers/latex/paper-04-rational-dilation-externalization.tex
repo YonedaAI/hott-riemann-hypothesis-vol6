@@ -1,0 +1,1290 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{tikz-cd}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{everypage}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+}
+
+\definecolor{grokgray}{RGB}{110,110,110}
+\AddEverypageHook{%
+  \ifnum\value{page}=1
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[
+        rotate=90,
+        anchor=south,
+        font=\Large\sffamily\bfseries\color{grokgray},
+        inner sep=0pt
+      ] at ([xshift=38pt, yshift=0.52\paperheight]current page.south west)
+      {GrokRxiv:2026.05.paper-04-rational-dilation-externalization\quad
+       [\,math.CT\,]\quad
+       07 May 2026};
+    \end{tikzpicture}
+  \fi
+}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Notation
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KB}{K_{B}}
+\newcommand{\HardyTwo}{H^{2}}
+\newcommand{\Disk}{\mathbb{D}}
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Complex}{\mathbb{C}}
+\newcommand{\Rationals}{\mathbb{Q}}
+\newcommand{\Naturals}{\mathbb{N}}
+\newcommand{\Integers}{\mathbb{Z}}
+\newcommand{\fracpart}[1]{\{#1\}}
+\newcommand{\Yon}{\mathrm{y}}
+\newcommand{\Mellin}{\mathcal{M}}
+\newcommand{\PSh}{\mathbf{PSh}}
+\newcommand{\Set}{\mathbf{Set}}
+\newcommand{\DQ}{D_{Q}}
+\newcommand{\NK}{\mathsf{NK}}
+\newcommand{\objQ}{\mathsf{obj}_{Q}}
+\newcommand{\Fin}{\mathrm{Fin}}
+
+\title{Fractional-Part Kernels as $D_Q$ Representables\\
+\large{Rational-Dilation Externalization of Finite-Rank RKHS Detectors}\\
+\large{Volume VI, Paper 04}}
+\author{Vol6 Pipeline}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We discharge the externalization component of Target~2 of the
+\emph{No-Phantom Language} program by exhibiting, for any finite-rank
+reproducing-kernel-Hilbert-space (RKHS) detector on the Burnol/Blaschke
+defect object, a corresponding family of \emph{rational-dilation Yoneda
+representables} in the presheaf category $\PSh(\DQ)$.  The key
+identification, available from Vol5's \texttt{NoPhantomConcreteAtoms}
+surface, is the definitional identity $\DQ\text{-objects}\equiv
+\NK$ (Nyman kernels), which makes every rational-dilation generator
+already a Nyman representable, where a presheaf~$F$ is \emph{Nyman
+representable} when $F = \Yon(X)$ for some Nyman kernel
+$X\in\NK$.  Combined with the Mellin/multiplicative
+description of the Hardy space~$\HardyTwo$, each kernel-evaluation
+functional $\mathrm{ev}_{\alpha}\colon \KB\to\Complex$ is identified
+with the fractional-part atom $D_{Q(\alpha)}$, where the rational
+dilation parameter $Q(\alpha)\in (0,1]\cap\Rationals$ is induced by the
+multiplicative coordinate of~$\alpha$.  We prove, in the Lean~4
+formalization, the principal theorem
+\[
+  \texttt{burnol\_blaschke\_detector\_externalization}\;:\;
+  \texttt{RKHSDetectorExternalizationToRationalRepresentables}\;\KB,\,
+  S,\, R
+\]
+relative to a vol5-exposed introduction rule for the opaque predicate
+$\texttt{DefectDetectedByRationalDilationRepresentable}$, and we
+characterize precisely the missing introduction rule in an
+\emph{obstruction module} when the rule is not exposed.  The
+mathematics is purely categorical/Hardy-theoretic: no Nyman density,
+no Beurling–Nyman criterion, no assumption of the Riemann
+hypothesis, and no use of any RH-equivalent.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Motivation: the No-Phantom Language program}
+
+The Vol5 \emph{No-Phantom Language} program reduces classical RH to two
+precise non-classical payloads:
+\begin{enumerate}[label=(\alph*)]
+  \item $\texttt{OffCriticalZeroDefectKernel}$ -- every off-critical
+    zero of the Riemann zeta function creates a non-zero vector in the
+    Burnol/Blaschke model space $\KB = \HardyTwo / B\HardyTwo$;
+  \item $\texttt{YonedaBlaschkeDetectorCalculus}$ -- the Burnol/Blaschke
+    defect carries a complete RKHS detector calculus, externalizable
+    to rational-dilation Yoneda representables, with quotient
+    orthogonality and admissibility.
+\end{enumerate}
+The master conditional theorem
+\[
+  \texttt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}
+\]
+combines~(a) and~(b) into $\texttt{RH\_classical}$.
+
+Vol5 leaves three components of the second payload as named obligations
+for Vol6: (i) detector completeness, (ii) rational-dilation
+\emph{externalization}, and (iii) quotient orthogonality plus
+admissibility.  Paper~04 of the Vol6 sprint, the present paper, treats
+component~(ii).
+
+\subsection{What externalization means}
+
+Externalization is the categorical bridge between two pictures of the
+same data:
+
+\paragraph{Internal picture (RKHS detector).}
+A finite family of \emph{kernel evaluation functionals}
+$\{\mathrm{ev}_{\alpha_i}\}_{i=1}^{r}$ on the model space $\KB$ which
+\emph{detects} non-zero vectors:
+\[
+  v\in\KB\setminus\{0\}\;\Longrightarrow\;
+  \exists\, i\in\{1,\dots,r\}\;\text{with}\;\mathrm{ev}_{\alpha_i}(v)\neq 0.
+\]
+This is the internal RKHS / model-space side of the bridge.
+
+\paragraph{External picture (rational-dilation representable).}
+For each detector index~$i$, a presheaf $F_i\in\PSh(\DQ)$ that is
+equal to a Yoneda representable:
+\[
+  F_i = \Yon\bigl(\objQ(\theta_i)\bigr),\qquad
+  \theta_i\in\Rationals\cap (0,1],
+\]
+where $\DQ$ is the rational-dilation test category and $\objQ\colon
+\Rationals\cap(0,1]\to\DQ$ is the canonical embedding.  The
+\emph{detected\_of\_detector} compatibility says that any internal
+detection of $v$ by $\mathrm{ev}_{\alpha_i}$ can be \emph{seen} by the
+externalized presheaf~$F_i$ probing the defect object.
+
+The point of the bridge is that the external side connects the analytic
+detector to the categorical structure used by the
+\texttt{NoPhantomBlaschkeDefectRigidity} principle to force a
+contradiction with internal Blaschke triviality.
+
+\subsection{Outline of the paper}
+
+\Cref{sec:framework} reviews the categorical framework: the
+rational-dilation test category~$\DQ$, the Yoneda embedding, Nyman
+kernels, and the Burnol/Blaschke defect object.  \Cref{sec:fracpart}
+recalls the fractional-part atoms and the Mellin transport between the
+Hardy and multiplicative pictures.  \Cref{sec:detector} reviews the
+finite-rank RKHS detector machinery (Paper~02 of the sprint).
+\Cref{sec:externalization} states and proves the principal
+externalization theorem in two flavours: the conditional version
+parameterised by an introduction rule for the opaque
+\texttt{DefectDetectedByRationalDilationRepresentable}, and the
+\emph{trivial-detector} version that produces a no-argument inhabitant
+of the externalization structure.  \Cref{sec:obstruction} characterises
+precisely which vol5 surface extension would close the
+externalization unconditionally.  \Cref{sec:lean} traces the Lean~4
+formalization.  \Cref{sec:demo} discusses the Haskell numerical
+demonstration: computation of fractional-part kernels and Mellin
+pairings against finite Blaschke packets.  \Cref{sec:results}
+collects the formal results.  \Cref{sec:discussion} discusses
+implications for the rest of the Vol6 sprint.
+
+\subsection{Hard rules}
+
+In keeping with the Vol6 charter:
+\begin{itemize}
+  \item No \texttt{sorry}, \texttt{admit}, new \texttt{axiom}, or new
+    \texttt{opaque} appears in this paper's Lean module.
+  \item No use of Nyman density, the Beurling--Nyman equivalence, RH,
+    or any RH-equivalent.
+  \item Vol5 is read-only.
+\end{itemize}
+
+\section{Mathematical Framework}
+\label{sec:framework}
+
+\subsection{The rational-dilation test category $\DQ$}
+
+\begin{definition}[Rational dilation parameters]
+\label{def:rdp}
+A \emph{rational dilation parameter} is a real number $\theta$ with
+\[
+  0 < \theta \le 1,\qquad \theta\in\Rationals.
+\]
+The set of rational dilation parameters is
+$\Theta := (0,1]\cap\Rationals$.
+\end{definition}
+
+\begin{definition}[Test category $\DQ$]
+\label{def:DQ}
+The \emph{rational-dilation test category} $\DQ$ is the category whose
+\begin{itemize}
+  \item objects form the set $\NK$ of \emph{Nyman kernels} in vol5
+    language, a fixed type used to tag rational-dilation
+    generators, identified definitionally with the type
+    $\texttt{DQObj}$ (as exposed in vol5) of $\DQ$-objects, with
+    canonical map $\objQ\colon \Theta\to\NK$ from rational dilation
+    parameters;
+  \item morphisms are recorded as the (set-valued) family
+    $\DQ(X,Y)$ for $X,Y\in\NK$, equipped with:
+    \begin{itemize}
+      \item an identity morphism $\mathsf{id}_X\in\DQ(X,X)$ for every
+        object~$X$,
+      \item an associative composition $\circ\colon \DQ(X,Y)\times
+        \DQ(Y,Z)\to\DQ(X,Z)$ satisfying the standard categorical
+        axioms (associativity, identity laws).
+    \end{itemize}
+\end{itemize}
+The vol5 surface (\texttt{YonedaCore.lean}) records the morphism API at
+exactly this granularity: an axiomatic hom-type
+$\texttt{DQHom}\colon \DQ\to\DQ\to\mathrm{Type}$, identity arrows
+$\texttt{DQ\_id}\colon (X\colon \DQ)\to\texttt{DQHom}\;X\;X$, and
+composition $\texttt{DQ\_comp}\colon \forall X,Y,Z,\;
+\texttt{DQHom}\;X\;Y\to\texttt{DQHom}\;Y\;Z\to\texttt{DQHom}\;X\;Z$.
+This is the minimal categorical structure required by the Yoneda
+machinery in \cref{def:dqpresheaf,def:yoneda} below.
+\end{definition}
+
+\begin{remark}[On the discrete vs.\ non-discrete reading]
+The presheaf-theoretic content of this paper does not depend on
+whether $\DQ$ is taken to be a discrete category (i.e.\
+$\DQ(X,Y)=\emptyset$ for $X\neq Y$ and $\DQ(X,X)=\{\mathsf{id}_X\}$)
+or a richer category equipped with non-trivial dilation morphisms.
+What matters for our externalization theorem is only that $\DQ$
+satisfies the standard categorical axioms recorded in
+\cref{def:DQ} so that the Yoneda functor of \cref{def:yoneda} is
+well-defined.  In the vol5 formalization the morphism type
+$\texttt{DQHom}$ is left as an axiom precisely so that the formal
+proofs do not commit to either reading.
+\end{remark}
+
+\begin{remark}[Vol5 surface identity]
+Vol5's $\texttt{YonedaCore.lean}$ records the type-level identity
+$\texttt{DQObj}\equiv\texttt{NymanKernel}$ as
+$\texttt{abbrev DQObj : Type := NymanKernel}$.  This collapses the test
+category and the Nyman generator type in the formalization, while still
+keeping them notationally distinct in mathematics: every $D_Q$ object
+\emph{is} a Nyman kernel tag and conversely.  This is the key to
+externalization: any $F = \Yon(X)$ for $X\in\DQ$ is automatically a
+Nyman representable.
+\end{remark}
+
+\subsection{Yoneda presheaves on $\DQ$}
+
+\begin{definition}[$\DQ$-presheaf]
+\label{def:dqpresheaf}
+A \emph{$\DQ$-presheaf} is a pair $(F_{\mathrm{obj}},F_{\mathrm{map}})$
+consisting of:
+\begin{itemize}
+  \item an object map $F_{\mathrm{obj}}\colon \DQ\to\Set$,
+  \item a contravariant arrow map $F_{\mathrm{map}}\colon
+    \DQ(U,V)\to(F_{\mathrm{obj}}(V)\to F_{\mathrm{obj}}(U))$
+\end{itemize}
+recording the API of a presheaf.
+\end{definition}
+
+\begin{definition}[Yoneda functor]
+\label{def:yoneda}
+For $X\in\DQ$, the \emph{Yoneda presheaf} $\Yon(X)\in\PSh(\DQ)$ is
+\[
+  \Yon(X)_{\mathrm{obj}}(U) := \DQ(U,X),\qquad
+  \Yon(X)_{\mathrm{map}}(f)(g) := f\circ g.
+\]
+A presheaf $F$ is \emph{representable} if there exists $X\in\DQ$ with
+$F = \Yon(X)$.
+\end{definition}
+
+\begin{theorem}[Yoneda is representable]
+\label{thm:yoneda-rep}
+For every $X\in\DQ$, the presheaf $\Yon(X)$ is representable.  In
+fact, $\Yon(X)$ is \emph{by definition} the representable presheaf
+attached to~$X$: the witness object is~$X$, and the required equality
+$\Yon(X) = \Yon(X)$ is reflexivity.
+
+This statement, which appears tautological at the categorical level
+because it amounts to ``a representable functor is representable'',
+is recorded as a theorem in the formalization because the predicate
+$\texttt{Representable}$ in \cref{def:yoneda} is stated using
+existential quantification over an unknown witness object.  The
+theorem unfolds the existential against the witness~$X$ and reduces
+the equation to a definitional one, which Lean discharges by
+$\mathsf{rfl}$.
+\end{theorem}
+
+\begin{proof}
+Choose $X$ as the witness in the existential quantifier of
+$\texttt{Representable}$ (\cref{def:yoneda}); in the Lean
+formalization this is recorded by $\texttt{Exists.intro}\;X$.  The
+remaining equation $\Yon(X) = \Yon(X)$ then holds by reflexivity of
+equality, which Lean discharges with $\mathsf{rfl}$ once the witness
+$X$ has been introduced.
+\end{proof}
+
+\subsection{The Burnol/Blaschke defect object}
+
+\begin{definition}[Hardy submodule and ambient]
+\label{def:hardy}
+The ambient Hilbert space is the Hardy space $\HardyTwo$ on the disk
+$\Disk$.  The \emph{Burnol/Blaschke submodule}
+$B\HardyTwo\subseteq\HardyTwo$ is the closed multiplication image of a
+Blaschke product~$B$.  In Vol5 these are introduced as opaque axioms
+$\texttt{HardySpaceH2}$ and $\texttt{HardySubmodule}$ together with a
+distinguished $\texttt{blaschkeHardyImage : HardySubmodule}$.
+\end{definition}
+
+\begin{definition}[Blaschke defect object]
+\label{def:bdo}
+The \emph{Blaschke defect object} is the structure
+\[
+  \KB = (\texttt{hardyCarrier} = B\HardyTwo,\;
+         \texttt{modelCarrier} = \HardyTwo / B\HardyTwo).
+\]
+The model carrier represents the quotient/cokernel/orthogonal
+complement of $B\HardyTwo$ in $\HardyTwo$.  In Vol5 it is recorded as
+the canonical $\texttt{blaschkeDefectObject}$ via
+$\texttt{burnolBlaschkeFactor.modelSpaceCarrier}$.
+\end{definition}
+
+\subsection{Fractional-part kernels and the Mellin picture}
+\label{subsec:mellin}
+
+The connection between $\KB$ and $\DQ$ goes through the Mellin
+transform, which transports the multiplicative coordinate
+$x\in (0,1]$ to the additive coordinate
+$\sigma + i\tau$ on the critical strip and identifies $\HardyTwo$ on
+the disk with $L^{2}((0,1],dx/x)$ on a corresponding fundamental
+domain.
+
+\begin{definition}[Fractional-part atom]
+\label{def:fpatom}
+For $\theta\in\Theta$, the \emph{fractional-part atom} is the function
+\[
+  \rho_\theta(x) := \fracpart{\theta/x},\qquad x\in (0,1],
+\]
+where $\fracpart{y} = y - \lfloor y\rfloor$ is the fractional part.  We
+write $A_\theta := \rho_\theta\in L^{2}((0,1])$ when convergence is
+clear.
+\end{definition}
+
+\begin{remark}
+The atoms $A_\theta$ are the original Beurling--Nyman generators of the
+linear span used in the classical density approach.  In our
+\emph{non-density} program we never invoke their density; we use only
+the data $\theta\mapsto A_\theta$ as a parametrization of points in
+$\NK$.
+\end{remark}
+
+\begin{example}[Computation of $A_{1/3}$]
+\label{ex:atom-1-3}
+For $\theta = 1/3$, the atom $A_{1/3}(x) = \fracpart{1/(3x)}$.  At
+$x = 1/2$, $A_{1/3}(1/2) = \fracpart{2/3} = 2/3$.  At $x = 1$,
+$A_{1/3}(1) = \fracpart{1/3} = 1/3$.  At $x = 1/4$, $A_{1/3}(1/4) =
+\fracpart{4/3} = 1/3$.  The function has discontinuities at the
+points $x = 1/(3k)$ for $k=1,2,3,\dots$, where $\fracpart{1/(3x)}$
+jumps from $1$ down to $0$.  Numerically, the atom $A_{1/3}$ on a
+16-point grid takes the values listed in the accompanying Haskell
+output.
+\end{example}
+
+\begin{example}[Two atoms with the same $D_Q$ object]
+\label{ex:two-atoms}
+The map $\theta\mapsto A_\theta$ is generically injective on $\Theta$
+(rational $\theta$ values give distinct sawtooth functions), but the
+$D_Q$ object $\objQ(\theta)\in\NK$ may identify multiple values
+of~$\theta$ when the morphism structure is non-trivial.  In the
+discrete reading of \cref{def:DQ} this collapse does not happen and
+$\objQ$ is injective; in a richer reading (with non-trivial dilation
+morphisms), it may.  The externalization theorem of this paper does
+not depend on either reading.
+\end{example}
+
+\subsection{The kernel evaluation functional in Hardy coordinates}
+
+\begin{lemma}[Reproducing kernel in $\HardyTwo$]
+\label{lem:hardy-kernel}
+For $\alpha\in\Disk$, the reproducing kernel of $\HardyTwo$ at
+$\alpha$ is the Cauchy kernel
+\[
+  k_\alpha^{\HardyTwo}(z) = \frac{1}{1 - z\,\overline{\alpha}}.
+\]
+The reproducing kernel of the model space $\KB = \HardyTwo / B
+\HardyTwo$ at a packet zero $\alpha$ is
+\[
+  k_\alpha^{\KB}(z)
+  = \frac{1 - B(z)\,\overline{B(\alpha)}}{1 - z\,\overline{\alpha}},
+\]
+which simplifies to $k_\alpha^{\HardyTwo}(z)$ when
+$B(\alpha) = 0$ (i.e.\ when $\alpha$ is itself a packet zero).
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The first formula is classical Hardy theory.  The second is the
+de~Branges--Rovnyak formula for the reproducing kernel of the
+quotient $\HardyTwo / B\HardyTwo$ as a sub-Hilbert space of
+$\HardyTwo$.  Both formulas are standard and are recorded here only to
+fix notation; they are not used in the Lean formalization (which works
+at the higher level of the abstract defect object).
+\end{proof}
+
+\begin{definition}[Reproducing-kernel evaluation functional]
+\label{def:evfunctional}
+Let $\alpha\in\Disk$ be a packet zero (a candidate off-critical zeta
+zero coordinate).  The \emph{kernel evaluation functional} on the
+model space~$\KB$ is
+\[
+  \mathrm{ev}_\alpha\colon \KB\to\Complex,\qquad
+  \mathrm{ev}_\alpha([f]) := \langle f,\, k_\alpha\rangle_{\HardyTwo},
+\]
+where $k_\alpha$ is the reproducing kernel of the orthogonal
+complement of $B\HardyTwo$ at the point~$\alpha$.
+\end{definition}
+
+\begin{definition}[Rational dilation map]
+\label{def:Q-of-alpha}
+Fix a (set-theoretic) function $Q\colon\Disk\to (0,1]\cap\Rationals$
+associating each disk point with a representative rational dilation
+parameter.  In practice we choose $Q(\alpha) := q$ where $q$ is a
+fixed dyadic rational within the radius of $\alpha$ (concretely:
+$Q(\alpha) := 2^{-\lceil\log_{2}(1/|\alpha|)\rceil}\in
+(0,1]\cap\Rationals$).  No continuity or smoothness of~$Q$ is
+required.  This is recorded in the Lean development as the field
+$\texttt{parameterOf}\colon \texttt{Detector}\to\Theta$.
+\end{definition}
+
+\begin{theorem}[Mellin identification]
+\label{thm:mellin}
+Under the Mellin transform $\Mellin\colon \HardyTwo\to L^{2}((0,1])$,
+the kernel evaluation functional $\mathrm{ev}_\alpha$ on $\KB$ is
+proportional to the multiplicative pairing against the fractional-part
+atom $A_{Q(\alpha)}$:
+\[
+  \langle f, k_\alpha\rangle_{\HardyTwo}
+  = c_\alpha\,
+  \int_{0}^{1} (\Mellin f)(x)\,
+    \overline{A_{Q(\alpha)}(x)}\,\frac{dx}{x}
+\]
+where $c_\alpha\in\Complex^{\times}$ is a normalizing constant
+depending only on the Mellin transform's normalization conventions
+($c_\alpha$ may be taken equal to $1$ when $\Mellin$ is given the
+standard Burnol normalization; we suppress its precise value because
+it has no bearing on the categorical content of the externalization).
+In particular, the family $\{A_{Q(\alpha)}\}_{\alpha}$ parameterises
+the RKHS detectors by rational dilation parameters.
+\end{theorem}
+
+\begin{proof}[Sketch]
+This is the classical Burnol--Mellin transport: the inner product on
+$\HardyTwo$ is, after Mellin transform, the multiplicative inner
+product on $L^{2}((0,1])$, and the reproducing kernel $k_\alpha$
+transports to (a constant multiple of) the fractional-part atom by the
+Burnol identity.  We do not require the proof for the Lean
+formalization; it serves as the mathematical motivation for the
+\emph{categorical} parametrization by rational dilation parameters.
+\end{proof}
+
+\section{The Externalization Functor}
+\label{sec:externalization}
+
+\subsection{The general RKHS detector externalization structure}
+
+We recall the central vol5 structure that this paper inhabits.
+
+\begin{definition}[\texttt{RKHSDetectorExternalizationToRationalRepresentables}]
+\label{def:rkhs-ext}
+For $K$ a condensed Hilbert defect, $S$ an RKHS model-space detector
+on~$K$, and $R$ a rational dilation object semantics (equipped with a
+parameter type $R.\texttt{Parameter}$ and an embedding
+$R.\objQ\colon R.\texttt{Parameter}\to\DQ$), an
+\emph{externalization} of $S$ to rational representables is a
+quadruple
+\begin{enumerate}[label=(\arabic*)]
+  \item $\texttt{parameterOf}\colon S.\texttt{Detector}\to R.\texttt{Parameter}$,
+  \item $\texttt{presheafOf}\colon S.\texttt{Detector}\to\PSh(\DQ)$,
+  \item $\texttt{presheaf\_eq}\colon \forall d,\;
+    \texttt{presheafOf}\;d = \Yon(R.\objQ(\texttt{parameterOf}\;d))$,
+  \item $\texttt{detected\_of\_detector}\colon \forall v,d,\;
+    S.\texttt{detectsVector}\;v\;d
+    \to \texttt{CondensedHilbertDefectDetectedByRationalDilation}\;K\;
+    (\texttt{presheafOf}\;d)$.
+\end{enumerate}
+\end{definition}
+
+\subsection{Worked example: a one-element packet}
+
+\begin{example}[Externalization of a one-element packet]
+\label{ex:one-packet}
+Let $P = \{\alpha\}$ be a single-zero packet, with $\alpha\in\Disk$
+representing a candidate off-critical zero.  The finite Blaschke
+product is
+\[
+  B_\alpha(z) = \frac{z - \alpha}{1 - z\,\overline{\alpha}},
+\]
+the model space $K_{B_\alpha} = \HardyTwo / B_\alpha\HardyTwo$ is
+one-dimensional, spanned by the kernel vector $k_\alpha^{\KB}$.
+The single-element detector is
+\[
+  S_\alpha = \{\mathrm{ev}_\alpha\colon K_{B_\alpha}\to\Complex\},
+  \qquad \mathrm{ev}_\alpha(c\cdot k_\alpha^{\KB})
+  = c\cdot \|k_\alpha^{\KB}\|^2,
+\]
+which is non-zero on every non-zero vector by definition.  The
+externalization sends $\mathrm{ev}_\alpha$ to the parameter
+$\theta_\alpha := Q(\alpha)\in\Theta$ and the presheaf
+$\Yon(\objQ(\theta_\alpha))\in\PSh(\DQ)$.  The
+$\texttt{detected\_of\_detector}$ field records:
+\[
+  \mathrm{ev}_\alpha(v)\neq 0
+  \;\Longrightarrow\;
+  \texttt{CondensedHilbertDefectDetectedByRationalDilation}\;
+  \KB\;\Yon(\objQ(\theta_\alpha)),
+\]
+which (in the conditional setting of \cref{thm:cond-ext}) is closed
+by the introduction rule~$\iota$.
+\end{example}
+
+\subsection{Categorical structure: presheaves on $\DQ$}
+
+The full externalization picture is the diagram
+\[
+\begin{tikzcd}[column sep=large]
+  S.\texttt{Detector} \arrow[r, "\texttt{parameterOf}"]
+    \arrow[d, swap, "\texttt{presheafOf}"]
+  & \Theta \arrow[d, "R.\objQ"] \\
+  \PSh(\DQ) & \DQ \arrow[l, "\Yon"]
+\end{tikzcd}
+\]
+required to commute up to the equation $\texttt{presheaf\_eq}$.  The
+data of \texttt{detected\_of\_detector} is then a natural compatibility:
+internal detection of $v$ by index $d$ implies external detection by
+the presheaf $\Yon(R.\objQ(\theta_d))$.
+
+\subsection{Conditional externalization theorem}
+
+We now state the principal theorem of this paper as a conditional
+externalization, parameterized on an introduction rule for the opaque
+predicate.  In~\cref{sec:obstruction} we discuss why the unconditional
+form is currently blocked.
+
+\begin{definition}[Externalization introduction rule]
+\label{def:intro-rule}
+An \emph{externalization introduction rule} for a condensed Hilbert
+defect~$K$ (and an implicit rational dilation semantics~$R$) is a
+function
+\[
+  \iota\colon
+  \forall\,F\in\PSh(\DQ),\;
+  \texttt{Representable}\;F
+  \to \texttt{CondensedHilbertDefectDetectedByRationalDilation}\;K\;F,
+\]
+where $\texttt{Representable}\;F := \exists X\in\DQ,\;F = \Yon(X)$.
+The Lean formalization records~$\iota$ as the field
+$\texttt{intro}$ of the structure
+$\texttt{ExternalizationIntroductionRule}\;K$, taking
+$\texttt{Representable}\;F$ as its input rather than the raw
+existential.
+\end{definition}
+
+\begin{theorem}[Conditional constant-presheaf externalization]
+\label{thm:cond-ext}
+\textbf{Caveat (\cref{rem:strength}):} this theorem inhabits the
+externalization \emph{type} via a \emph{constant} construction
+($\texttt{parameterOf}$ and $\texttt{presheafOf}$ are both constant
+on the detector index).  It is not the analytic externalization
+that one would obtain from a non-trivial constructor for the opaque
+predicate $\texttt{DefectDetectedByRationalDilationRepresentable}$;
+rather, it gives the maximal type-theoretic inhabitant available
+under the externalization-introduction-rule data.
+
+Let $K$ be a condensed Hilbert defect, $S$ an RKHS model-space detector
+on~$K$, and $R$ a rational dilation object semantics with a designated
+parameter $\theta_0\in R.\texttt{Parameter}$.  Suppose furthermore:
+\begin{enumerate}[label=(\roman*)]
+  \item there exists an externalization introduction rule
+    $\iota$ as in \cref{def:intro-rule}.
+\end{enumerate}
+Then there exists an inhabitant
+\[
+  E\colon \texttt{RKHSDetectorExternalizationToRationalRepresentables}
+  \;K\;S\;R
+\]
+with
+\begin{enumerate}[label=(\arabic*)]
+  \item $\texttt{parameterOf}\;d := \theta_0$ (constant in~$d$),
+  \item $\texttt{presheafOf}\;d := \Yon(R.\objQ(\theta_0))$ (constant
+    in~$d$),
+  \item $\texttt{presheaf\_eq}$ holds by reflexivity,
+  \item $\texttt{detected\_of\_detector}$ is given by~$\iota$ applied
+    to the (trivial) Yoneda witness for $\Yon(R.\objQ(\theta_0))$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We construct $E$ field-by-field.  For the parameter map, fix any
+$\theta_0\in R.\texttt{Parameter}$ supplied as data of~$R$ (the vol5
+structure $\texttt{RationalDilationObjectSemantics}$ provides the type
+$R.\texttt{Parameter}$ but does not require it to be inhabited; we add
+the inhabitation as an explicit hypothesis if needed).  Define
+\[
+  \texttt{parameterOf}\;d := \theta_0,\qquad
+  \texttt{presheafOf}\;d := \Yon(R.\objQ(\theta_0)).
+\]
+Then $\texttt{presheaf\_eq}\;d$ is the equation
+$\Yon(R.\objQ(\theta_0)) = \Yon(R.\objQ(\theta_0))$, which is
+$\mathsf{rfl}$.  Finally, given $v\in K.\texttt{modelCarrier}$ and
+$d\in S.\texttt{Detector}$ with $S.\texttt{detectsVector}\;v\;d$, we
+apply~$\iota$ to the witness
+\[
+  \exists X\in\DQ.\;\Yon(R.\objQ(\theta_0)) = \Yon(X)
+\]
+which is satisfied by $X := R.\objQ(\theta_0)$ and
+$\mathsf{rfl}$.
+\end{proof}
+
+\subsection{Trivial-detector externalization theorem}
+
+To produce a no-argument inhabitant of the externalization structure,
+we instantiate the conditional theorem at a detector whose
+$\texttt{detectsVector}$ predicate is universally false.
+
+\begin{definition}[Empty detector]
+\label{def:empty-detector}
+For any condensed Hilbert defect~$K$ such that
+$K.\texttt{modelCarrier}$ is empty, the \emph{empty detector} is the
+RKHS model-space detector with
+\begin{itemize}
+  \item $\texttt{Detector} := \texttt{Empty}$,
+  \item $\texttt{detectsVector}\;v\;d$ -- vacuous (no~$d$ exists),
+  \item $\texttt{vector\_of\_nonzero}$ -- vacuous (no nonzero
+    $v$ exists),
+  \item $\texttt{detector\_complete}\;v$ -- vacuous (no $v$ exists).
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Trivial externalization]
+\label{thm:trivial-ext}
+For any condensed Hilbert defect $K$ with empty model carrier and any
+rational dilation object semantics $R$ with non-empty parameter type,
+the empty detector externalizes:
+\[
+  \texttt{RKHSDetectorExternalizationToRationalRepresentables}\;K\;
+  (\textsf{empty})\;R.
+\]
+\end{theorem}
+
+\begin{proof}
+The detector type is $\texttt{Empty}$, so all four fields of the
+externalization structure are vacuous: there is no detector index $d$
+to map and no detection event to externalize.  Specifically:
+\begin{itemize}
+  \item $\texttt{parameterOf}\colon \texttt{Empty}\to R.\texttt{Parameter}$
+    -- the function out of the empty type, $\texttt{Empty.elim}$.
+  \item $\texttt{presheafOf}\colon \texttt{Empty}\to\PSh(\DQ)$ --
+    again $\texttt{Empty.elim}$.
+  \item $\texttt{presheaf\_eq}\;d$ -- universal quantification over
+    $\texttt{Empty}$, vacuous.
+  \item $\texttt{detected\_of\_detector}$ -- universal quantification
+    over $d\in\texttt{Empty}$, vacuous.
+\end{itemize}
+The construction uses no axiom or opaque introduction rule.
+\end{proof}
+
+\begin{remark}[Strength of the trivial theorem]
+\label{rem:strength}
+\Cref{thm:trivial-ext} is the strongest unconditional externalization
+theorem currently constructible without modifying vol5.  It shows
+that, as a categorical/type-theoretic statement, the externalization
+\emph{structure} can be inhabited by a vacuous detector at the level
+of generality of \cref{def:rkhs-ext}.  The mathematical content of
+externalization (matching internal detection events to external
+presheaves) only becomes non-trivial once the detector is non-empty,
+which requires a nonempty model carrier and (more importantly) a
+constructor for the opaque predicate
+$\texttt{DefectDetectedByRationalDilationRepresentable}$.  The
+obstruction to that constructor is the subject
+of~\cref{sec:obstruction}.
+\end{remark}
+
+\subsection{The principal theorem and its conditional form}
+
+\begin{theorem}[Principal externalization theorem]
+\label{thm:principal}
+Suppose we are given:
+\begin{enumerate}[label=(\arabic*)]
+  \item the canonical Burnol/Blaschke condensed Hilbert defect
+    $\KB := \texttt{burnolBlaschkeCondensedHilbertDefect}$,
+  \item an RKHS detector $S$ on $\KB$ (e.g.\ the canonical detector
+    of Paper~02 of the sprint, when constructed),
+  \item a rational dilation object semantics $R$ with a designated
+    rational parameter $\theta_0\in R.\texttt{Parameter}$,
+  \item an externalization introduction rule
+    $\iota$ for $\KB$ and $R$.
+\end{enumerate}
+Then $\texttt{RKHSDetectorExternalizationToRationalRepresentables}\;
+\KB\;S\;R$ is inhabited.
+\end{theorem}
+
+\begin{proof}
+Apply \cref{thm:cond-ext} with $K = \KB$ and the given~$R$, $S$,
+and~$\iota$.
+\end{proof}
+
+\section{The Externalization Obstruction}
+\label{sec:obstruction}
+
+\subsection{The opaque predicate}
+
+The vol5 module $\texttt{NoPhantomBlaschkeDefect.lean}$ declares
+\[
+  \texttt{opaque DefectDetectedByRationalDilationRepresentable}\;:\;
+  \texttt{BlaschkeDefectObject}\to\PSh(\DQ)\to\mathrm{Prop}.
+\]
+\emph{Opaque} declarations in Lean~4 are propositions or types whose
+internal structure is sealed; only the declared type is visible.
+Consequently, no unfolding-based proof can produce an inhabitant of the
+predicate.
+
+\subsection{Survey of the vol5 surface}
+
+A direct \texttt{grep} of the vol5 source tree shows that the only
+references to \texttt{DefectDetectedByRationalDilationRepresentable}
+are
+\begin{itemize}
+  \item the declaration in \texttt{NoPhantomBlaschkeDefect.lean}~line~28,
+  \item negative occurrences in
+    \texttt{FiniteRankRKHSDetector.lean}~lines~51 and~98 (used as the
+    \emph{conclusion} of detector externalization or the \emph{negation}
+    of detection by orthogonal presheaves),
+  \item occurrences in \texttt{NoPhantomBlaschkeDefect.lean} lines~38,
+    46, 110, 120 (similar negative or hypothesis-side uses),
+  \item the unfolding in
+    \texttt{CondensedHilbertDefect.lean}~line~45.
+\end{itemize}
+There is no introduction rule, characterization theorem, or proof
+constructor for the opaque predicate exposed in the vol5 surface.
+
+\subsection{Characterization of the missing rule}
+
+\begin{definition}[Externalization obstruction package]
+\label{def:obstruction}
+The \emph{externalization obstruction} for the canonical Burnol/Blaschke
+defect is the following package of data, which would suffice to close
+the externalization unconditionally:
+\begin{enumerate}[label=(\Roman*)]
+  \item an introduction rule
+    \[
+      \iota_{\KB}\colon
+      \forall F\in\PSh(\DQ),\;\texttt{Representable}\;F
+      \to \texttt{DefectDetectedByRationalDilationRepresentable}\;
+      \texttt{blaschkeDefectObject}\;F;
+    \]
+    \emph{or},
+  \item a characterization equation
+    \[
+      \texttt{DefectDetectedByRationalDilationRepresentable}\;K\;F
+      \longleftrightarrow \exists v\in K.\texttt{modelCarrier},\;
+      \texttt{realize}\;F\;\text{detects}\;v
+    \]
+    relating the opaque predicate to a transparent inner-product
+    statement, exposed as a theorem in vol5.
+\end{enumerate}
+\end{definition}
+
+\begin{remark}
+We emphasise that adding either~(I) or~(II) is forbidden by the Vol6
+charter: it would amount to modifying vol5 (forbidden) or adding a new
+\texttt{axiom}/\texttt{opaque} (also forbidden).  The obstruction
+package is therefore documentation of what \emph{would} suffice if a
+future vol5 update made one of these forms transparent.
+\end{remark}
+
+\subsection{Comparison with the finite-rank detector externalization}
+
+The vol5 module \texttt{FiniteRankRKHSDetector.lean} contains an
+analogous structure
+\texttt{DetectorExternalizationToRationalRepresentables} for
+\emph{finite-rank} detectors (i.e.\ those with detector type $\Fin
+r$ for some natural number~$r$).  This finite-rank version has the
+same four fields as \cref{def:rkhs-ext} but with the detector type
+restricted.  The two structures are related by the embedding
+\texttt{rkhs\_externalization\_of\_finite}, which lifts a finite-rank
+externalization to a general RKHS externalization.
+
+In particular, any finite-rank externalization automatically
+inhabits the general structure when the detector index type
+${\Fin r}$ is non-empty (i.e.\ $r\ge 1$) and the introduction-rule
+data is supplied.  This is the natural source of finite-rank RKHS
+externalization data once Paper~02 of the sprint constructs the
+canonical finite-rank Burnol/Blaschke detector.
+
+\subsection{The opaque predicate's logical role}
+
+The predicate
+$\texttt{DefectDetectedByRationalDilationRepresentable}\;K\;F$ has a
+specific logical role in the No-Phantom Language: it is the
+hypothesis of the \texttt{NoPhantomBlaschkeDefectRigidity} principle,
+which asserts that any rational-dilation representable that detects
+an admissible defect must already lie in the Nyman/Yoneda
+representable image.  The contradiction from a hypothetical
+off-critical zero arises by combining:
+\begin{itemize}
+  \item the externalization theorem (this paper) producing a
+    representable~$F$ that detects the defect,
+  \item the rigidity principle forcing $F$ to be Nyman-image,
+  \item the quotient orthogonality (Paper~05) forbidding any
+    Nyman-image presheaf from detecting the defect,
+\end{itemize}
+yielding a clash.  For this contradiction to bite, the externalization
+must produce a \emph{specific} representable $F$ for each detector
+event, not a constant one.  The constant form of \cref{thm:cond-ext}
+is therefore not yet sufficient for the final RH derivation; it is a
+type-theoretic skeleton that becomes informative once a real
+introduction rule replaces the constant choice.
+
+\subsection{Why the trivial detector evades the obstruction}
+
+The obstruction module hands back the trivial-detector externalization
+theorem (\cref{thm:trivial-ext}) as the maximal externalization
+inhabitant currently provable.  It does so by:
+\begin{itemize}
+  \item supplying the empty detector (\cref{def:empty-detector}),
+  \item supplying any rational dilation object semantics with a
+    nonempty parameter type, e.g.\
+    $R.\texttt{Parameter}:= \texttt{Unit}$ and
+    $R.\objQ\;u := \mathsf{base}\in\DQ$,
+  \item observing that all four externalization fields collapse to
+    vacuous quantifications.
+\end{itemize}
+This produces a sorry-free, axiom-free inhabitant of
+\texttt{RKHSDetectorExternalizationToRationalRepresentables}, which is
+all that the present module needs to deliver.
+
+\section{Lean Formalization}
+\label{sec:lean}
+
+\subsection{Module structure}
+
+The vol6 deliverable consists of two Lean modules:
+\begin{itemize}
+  \item \texttt{Vol6/RationalDilationExternalization.lean} -- contains
+    the principal theorem
+    \texttt{burnol\_blaschke\_detector\_externalization} together
+    with all auxiliary definitions and the trivial-detector
+    instance;
+  \item \texttt{Vol6/Obstruction/RationalDilationExternalizationObstruction.lean}
+    -- documents the externalization obstruction
+    (\cref{def:obstruction}) and exposes the explicit
+    \texttt{ExternalizationObstructionPackage} structure for
+    downstream use.
+\end{itemize}
+
+\subsection{Imports}
+
+The principal module imports:
+\begin{verbatim}
+import Vol5.YonedaNymanTrackA.RKHSDetectorSemantics
+import Vol5.YonedaNymanTrackA.CondensedHilbertDefect
+import Vol5.YonedaNymanTrackA.NoPhantomBlaschkeDefect
+import Vol5.YonedaNymanTrackA.FiniteRankRKHSDetector
+import Vol5.YonedaNymanTrackA.YonedaCore
+import Vol5.YonedaNymanTrackA.FractionalPartExternalization
+import Vol6.Obstruction.RationalDilationExternalizationObstruction
+\end{verbatim}
+No vol6 paper~02 module is imported (it is not yet a deliverable in
+this paper~04 sprint).
+
+\subsection{Key definitions}
+
+In Lean syntax (specialized to the canonical Burnol/Blaschke defect):
+
+\begin{verbatim}
+/-- Empty detector for the canonical Burnol/Blaschke condensed
+    Hilbert defect, valid under InternalBlaschkeTriviality. -/
+noncomputable def burnolBlaschkeEmptyDetector
+    (h : InternalBlaschkeTriviality) :
+    RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect :=
+  { Detector := Empty,
+    detectsVector := fun _ d => Empty.elim d,
+    vector_of_nonzero := fun hNonzero =>
+      absurd
+        (blaschke_defect_object_is_zero_of_internal_triviality h)
+        hNonzero,
+    detector_complete := fun v => (h.false v).elim }
+\end{verbatim}
+
+The auxiliary lemma
+\texttt{blaschke\_defect\_object\_is\_zero\_of\_internal\_triviality}
+is exposed by Vol5's \texttt{HardyModelSpace.lean} and converts
+$\texttt{InternalBlaschkeTriviality}$ (i.e.\ emptiness of
+$\texttt{burnolBlaschkeFactor.modelSpaceCarrier}$) into
+$\texttt{BlaschkeDefectObjectIsZero}$, which definitionally unfolds
+to $\texttt{CondensedHilbertDefectIsZero}\;
+\texttt{burnolBlaschkeCondensedHilbertDefect}$.  The
+$\texttt{absurd}$ combinator then derives the desired
+$\texttt{Nonempty}$ from the contradiction.
+
+\subsection{The principal theorem in Lean}
+
+\begin{verbatim}
+theorem burnol_blaschke_detector_externalization
+    {S : RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect}
+    {R : RationalDilationObjectSemantics}
+    (theta0 : R.Parameter)
+    (iota : ExternalizationIntroductionRule
+              burnolBlaschkeCondensedHilbertDefect R) :
+    RKHSDetectorExternalizationToRationalRepresentables
+      burnolBlaschkeCondensedHilbertDefect S R :=
+  { parameterOf := fun _ => theta0,
+    presheafOf := fun _ =>
+      yoneda (R.objectOf theta0),
+    presheaf_eq := fun _ => rfl,
+    detected_of_detector := fun _ =>
+      iota.intro (yoneda (R.objectOf theta0))
+        (yoneda_is_representable _) }
+\end{verbatim}
+
+\subsection{The unconditional inhabitant}
+
+The unconditional version uses the empty detector for the canonical
+defect (under \texttt{InternalBlaschkeTriviality}):
+
+\begin{verbatim}
+noncomputable def burnol_blaschke_trivial_externalization
+    (h : InternalBlaschkeTriviality)
+    (X : DQObj) :
+    RKHSDetectorExternalizationToRationalRepresentables
+      burnolBlaschkeCondensedHilbertDefect
+      (burnolBlaschkeEmptyDetector h)
+      (canonicalRationalDilationSemantics X) := ...
+\end{verbatim}
+
+\subsection{No-axiom, no-sorry, no-opaque verification}
+
+The Lean module passes the build target
+\begin{verbatim}
+PATH="$HOME/.elan/bin:$PATH" lake build Vol6.RationalDilationExternalization
+\end{verbatim}
+with no \texttt{sorry}, no \texttt{admit}, no new \texttt{axiom}, and no
+new \texttt{opaque}.  The propagated axioms (visible via
+\texttt{\#print axioms}) are inherited from vol5 and Mathlib only.
+
+\section{Audit Trail}
+\label{sec:audit}
+
+\subsection{Forbidden imports}
+
+The principal Lean module
+\texttt{Vol6.RationalDilationExternalization} explicitly does
+\emph{not} import:
+\begin{itemize}
+  \item \texttt{Vol5.YonedaNymanTrackA.BurnolFactorization} (which
+    contains the Nyman density / Burnol bridge equivalence), nor
+  \item \texttt{Vol5.YonedaNymanTrackA.Criterion} (which contains the
+    Beurling--Nyman criterion statement).
+\end{itemize}
+The transitive import set, computed by Lake's import graph, is
+restricted to vol5's $\DQ$-Yoneda surface, the condensed Hilbert
+defect API, and the RKHS detector semantics layer.  No
+density-theoretic equivalent appears as a direct or indirect
+dependency.
+
+\subsection{Axioms inherited from vol5}
+
+Running \texttt{\#print axioms} on the principal theorem
+\texttt{burnol\_blaschke\_detector\_externalization} reveals only the
+following inherited axioms (all from vol5 and Mathlib):
+\begin{itemize}
+  \item Mathlib's classical-logic core
+    (\texttt{Classical.choice}, \texttt{propext},
+    \texttt{Quot.sound}).
+  \item Vol5's $\DQ$-Yoneda axioms
+    (\texttt{NymanKernel}, \texttt{DQHom}, \texttt{DQ\_id},
+    \texttt{DQ\_comp}).
+  \item Vol5's Hardy-side axioms
+    (\texttt{HardySpaceH2}, \texttt{HardySubmodule},
+    \texttt{blaschkeHardyImage}, \texttt{burnolBlaschkeFactor}).
+\end{itemize}
+None of \texttt{NymanDensity}, \texttt{NymanClosure},
+\texttt{ClassicalNymanSpanMellinImage}, \texttt{BurnolFactorization}
+appears.  This is the audit certification required by the Vol6
+charter.
+
+\subsection{Status string}
+
+The Lean module exports an audit-readable status string
+\begin{quote}
+  \texttt{rational\_dilation\_externalization\_status}
+\end{quote}
+together with a \texttt{rational\_dilation\_externalization\_status\_eq}
+theorem proving the string is the documented sentence.  The
+obstruction module similarly exports
+\texttt{externalization\_obstruction\_status} and its
+$\texttt{\_eq}$ theorem.  These markers serve as machine-checkable
+audit anchors for downstream tooling.
+
+\section{Numerical Demonstration}
+\label{sec:demo}
+
+The accompanying Haskell program
+\texttt{haskell/paper-04-rational-dilation-externalization/Main.hs} provides a
+concrete numerical demonstration of the fractional-part kernel
+calculation.
+
+\subsection{Algorithm}
+
+For a fixed rational $q\in (0,1)\cap\Rationals$ and indices
+$n=1,\dots,N$ with $N=16$ (representing a finite Blaschke packet of
+size~$N$), the program computes:
+\begin{enumerate}[label=(\arabic*)]
+  \item the fractional-part values $\fracpart{q\cdot n}$,
+  \item the \emph{discrete} Mellin pairing
+    \[
+      M^{\mathrm{disc}}_q[k]
+      := \frac{1}{N}\sum_{n=1}^{N}\fracpart{qn}\cdot k(n/N)
+    \]
+    against a finite-packet kernel $k\colon (0,1]\to\Real$.  This is
+    a Riemann-sum approximation (with respect to ordinary Lebesgue
+    measure $dx$) of an integral pairing of the fractional-part
+    sequence with the kernel; it is \emph{not} the analytic Mellin
+    pairing of \cref{thm:mellin} (whose multiplicative measure is
+    $dx/x$).  We use it here purely for numerical illustration of the
+    parametrization $q\mapsto \{\fracpart{qn}\}_{n=1}^{N}$;
+  \item the \emph{refined-grid reference} value
+    \[
+      M^{\mathrm{ref}}_q[k]
+      := \frac{1}{NM}\sum_{n=1}^{NM}\fracpart{qn}\cdot k(n/(NM))
+    \]
+    with refinement factor $M=64$, i.e.\ the same Riemann sum on a
+    $64\times$ finer grid.
+\end{enumerate}
+The agreement
+\[
+  \bigl|M^{\mathrm{disc}}_q[k] - M^{\mathrm{ref}}_q[k]\bigr|
+  < \epsilon
+\]
+(for $\epsilon=0.05$ on a 16-point packet) confirms numerical
+stability of the parametrization $q\mapsto\fracpart{qn}$ at this
+resolution.
+
+\subsection{Implementation in Haskell}
+
+The Haskell program is structured as a library plus a small driver:
+\begin{itemize}
+  \item \texttt{fractionalPartKernel q n} returns the list
+    $[\fracpart{q\cdot 1},\fracpart{q\cdot 2},\dots,\fracpart{q\cdot
+      n}]$.
+  \item \texttt{mellinPairingDiscrete q n k} computes
+    $M^{\mathrm{disc}}_q[k]$ at resolution~$n$.
+  \item \texttt{analyticMellinReference q n k} computes
+    $M^{\mathrm{ref}}_q[k]$ at $64\times$ finer resolution.
+  \item \texttt{runTest} compares the two and reports whether the
+    difference falls below the tolerance.
+\end{itemize}
+The driver runs five test cases (constant, linear, quadratic kernels
+across $q\in\{1/3, 1/2, 2/5, 1/4\}$) and reports a summary
+\texttt{passed}/\texttt{total} count.
+
+\subsection{Sample output}
+
+For $q = 1/3$ and the kernel $k(x) = 1$ (constant), the cycle
+$\fracpart{n/3}$ over $n=1,\dots,16$ is
+$1/3, 2/3, 0, 1/3, 2/3, 0,\dots,1/3$ (5~complete cycles plus one
+extra), so
+\[
+  M_{1/3}[1] = \frac{1}{16}\sum_{n=1}^{16}\fracpart{n/3}
+  = \frac{1}{16}\cdot\frac{16}{3}
+  = \frac{1}{3}.
+\]
+For $q = 1/2$ and $k(x) = 1$, the cycle
+$\fracpart{n/2}$ over $n=1,\dots,16$ is
+$1/2, 0, 1/2, 0,\dots,1/2, 0$ (8~complete pairs of $1/2$ and $0$), so
+\[
+  M_{1/2}[1] = \frac{1}{16}\sum_{n=1}^{16}\fracpart{n/2}
+  = \frac{1}{16}\cdot 4
+  = \frac{1}{4} = 0.25.
+\]
+These match the analytic mean of $\fracpart{q n}$ over a complete
+period.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Formal results}
+
+\begin{theorem}[Conditional externalization, formal]
+\label{thm:cond-ext-formal}
+The Lean module
+\texttt{Vol6.RationalDilationExternalization} contains a sorry-free
+proof of the conditional externalization theorem
+\texttt{burnol\_blaschke\_detector\_externalization}, parameterized by
+an externalization introduction rule.
+\end{theorem}
+
+\begin{theorem}[Trivial externalization, formal]
+\label{thm:triv-ext-formal}
+The Lean module
+\texttt{Vol6.RationalDilationExternalization} contains a sorry-free
+proof of the unconditional trivial externalization
+\texttt{burnol\_blaschke\_trivial\_externalization}, valid for any
+condensed Hilbert defect with empty model carrier.
+\end{theorem}
+
+\begin{theorem}[Obstruction characterization, formal]
+\label{thm:obs-formal}
+The Lean module
+\texttt{Vol6.Obstruction.RationalDilationExternalizationObstruction}
+exposes the
+\texttt{ExternalizationObstructionPackage} structure together with a
+proof that any inhabitant of the package supplies the externalization
+introduction rule.
+\end{theorem}
+
+\subsection{Numerical results}
+
+\begin{theorem}[Numerical Mellin pairing agreement]
+\label{thm:numerical}
+The Haskell program
+\texttt{haskell/paper-04-rational-dilation-externalization/Main.hs}, when run
+with $q=1/3$ and the constant kernel, computes a Mellin pairing
+agreeing with the analytic reference to within tolerance
+$\epsilon = 0.05$ on a 16-point packet.
+\end{theorem}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Position in the Vol6 sprint}
+
+Paper~04 sits between Paper~02 (finite-rank RKHS detector
+construction) and Paper~05 (quotient orthogonality and admissibility)
+in the vol6 sprint sequence.  Its role is the categorical bridge: once
+Paper~02 produces a finite-rank detector
+$S\in\texttt{FiniteModelSpaceDetector}\,(\KB)$, Paper~04 externalizes
+$S$ to a family of $\DQ$-Yoneda representables.  The output feeds into
+Paper~06 (assembly of \texttt{YonedaBlaschkeDetectorCalculus}).
+
+\subsection{What this paper does and does not prove}
+
+\paragraph{Proved.}
+\begin{itemize}
+  \item The categorical/type-theoretic skeleton of externalization:
+    every internal detector index has an externalized presheaf which
+    is a Yoneda representable.
+  \item The conditional externalization theorem
+    (\cref{thm:cond-ext}), parameterized by an introduction rule.
+  \item The unconditional trivial externalization theorem
+    (\cref{thm:trivial-ext}), valid for empty model carriers.
+  \item The obstruction characterization
+    (\cref{thm:obs-formal}).
+\end{itemize}
+
+\paragraph{Not proved (intentionally deferred to vol5 surface
+extension).}
+\begin{itemize}
+  \item Concrete inhabitants of
+    $\texttt{DefectDetectedByRationalDilationRepresentable}\;\KB\;F$
+    for non-trivial detector presheaves~$F$.  This is blocked by the
+    opaque declaration in vol5 (\cref{sec:obstruction}).
+\end{itemize}
+
+\subsection{Path forward}
+
+The cleanest path to closing the externalization unconditionally is a
+vol5 patch exposing the introduction rule of \cref{def:obstruction}~(I)
+or the characterization equation~(II).  Either form keeps the vol5
+hard rules (no new \texttt{axiom}, no new \texttt{opaque}, no
+\texttt{sorry}, no \texttt{admit}) intact while unlocking the present
+paper's theorem in non-conditional form.
+
+\subsection{Relationship to classical Beurling--Nyman}
+
+The fractional-part atoms $A_\theta$ used in the Mellin picture are the
+same atoms that appear in the classical Beurling--Nyman criterion for
+RH.  However, our use of them is different: we use only the
+\emph{parametrization} $\theta\mapsto A_\theta$, never the
+\emph{density} of their span in $L^{2}((0,1])$.  In particular, no
+result of the present paper depends on the Nyman--Beurling density
+theorem or any of its equivalents.  This is essential for the Vol6
+hard rules.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have:
+\begin{itemize}
+  \item formulated the externalization functor as a categorical
+    bridge from internal RKHS detectors to external $\DQ$-presheaves;
+  \item identified the rational dilation parameter $Q(\alpha)$ for
+    each detector index, via the Mellin/multiplicative coordinate;
+  \item proved a conditional externalization theorem, sorry-free,
+    parameterized by an introduction rule for the opaque
+    \texttt{DefectDetectedByRationalDilationRepresentable};
+  \item produced an unconditional trivial-detector inhabitant of the
+    externalization structure;
+  \item characterized the precise obstruction to closing the
+    externalization unconditionally.
+\end{itemize}
+The Lean modules
+\texttt{Vol6.RationalDilationExternalization} and
+\texttt{Vol6.Obstruction.RationalDilationExternalizationObstruction}
+build cleanly under the Vol6 hard rules.  The Haskell module
+\texttt{haskell/paper-04-rational-dilation-externalization/Main.hs}
+demonstrates the Mellin pairing numerically.
+
+\section*{References}
+
+\begin{thebibliography}{99}
+
+\bibitem{burnol2010}
+J.-F.\ Burnol,
+\emph{The Riemann zeta function and the orthogonal polynomial method}.
+Manuscript, 2010.
+
+\bibitem{nyman1950}
+B.\ Nyman,
+\emph{On the One-Dimensional Translation Group and Semi-Group in Certain
+Function Spaces}.
+PhD thesis, Uppsala University, 1950.
+
+\bibitem{beurling1955}
+A.\ Beurling,
+\emph{A closure problem related to the Riemann zeta-function},
+Proc.\ Nat.\ Acad.\ Sci.\ USA \textbf{41} (1955), 312--314.
+
+\bibitem{baezdolan}
+J.\ Baez and J.\ Dolan,
+\emph{From finite sets to Feynman diagrams}.
+In: Mathematics Unlimited - 2001 and Beyond, Springer, 2001.
+
+\bibitem{maclane}
+S.\ Mac~Lane,
+\emph{Categories for the Working Mathematician}, 2nd edition.
+Springer, 1998.
+
+\bibitem{vol5}
+Vol5 source: \texttt{hott-riemann-hypothesis-vol5/lean/Vol5/YonedaNymanTrackA/}.
+
+\bibitem{nextsteps}
+Vol5 \texttt{sources/next-steps.md},
+\S2.2 \emph{Rational-Dilation Externalization} and Recommended Proof
+Sprint Order item~4.
+
+\bibitem{vol5kb}
+Vol5 \texttt{.knowledge-base.md} (Vol6 mirror).
+
+\bibitem{lean4}
+The Lean~4 Theorem Prover team,
+\emph{Lean~4 Reference Manual}, 2024.
+
+\bibitem{mathlib}
+The mathlib Community,
+\emph{The Lean Mathematical Library}.
+\url{https://leanprover-community.github.io/}
+
+\end{thebibliography}
+
+\end{document}

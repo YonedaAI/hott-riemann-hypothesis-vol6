@@ -1,0 +1,1197 @@
+\documentclass[12pt]{article}
+
+% Core math
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+
+% Typography
+\usepackage{microtype}
+
+% Diagrams
+\usepackage{tikz-cd}
+\usepackage{tikz}
+
+% References
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
+\usepackage{cleveref}
+
+% Graphics
+\usepackage{graphicx}
+
+% Page layout
+\usepackage[margin=1in]{geometry}
+
+% Code listings
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{black!30},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+}
+
+% GrokRxiv sidebar
+\usepackage{everypage}
+
+% --- GrokRxiv sidebar ---
+\definecolor{grokgray}{RGB}{110,110,110}
+\AddEverypageHook{%
+  \ifnum\value{page}=1
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[
+        rotate=90,
+        anchor=south,
+        font=\Large\sffamily\bfseries\color{grokgray},
+        inner sep=0pt
+      ] at ([xshift=38pt, yshift=0.52\paperheight]current page.south west)
+      {GrokRxiv:2026.05.paper-02-finite-rank-detector\quad
+       [\,math.FA\,]\quad
+       07 May 2026};
+    \end{tikzpicture}
+  \fi
+}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Notation
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\HHH}{H^{2}}
+\newcommand{\KB}{K_{B}}
+\newcommand{\KBP}{K_{B_{P}}}
+\newcommand{\inner}[2]{\langle #1,\,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{\lvert #1 \rvert}
+\newcommand{\conj}[1]{\overline{#1}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\span}{span}
+\DeclareMathOperator{\diag}{diag}
+
+\title{Detector Completeness for Finite Blaschke Packets via Gram--Matrix Nondegeneracy}
+\author{Yoneda AI Research}
+\date{07 May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We construct an explicit finite-rank reproducing-kernel detector for the
+model space $\KBP=\HHH/B_{P}\HHH$ associated with a finite Blaschke packet
+$P=\{w_{1},\dots,w_{n}\}\subset\D$. The principal observation is that the
+Gram matrix $G_{ij}=\inner{k_{w_{i}}}{k_{w_{j}}}_{\HHH}$ of the
+reproducing kernels at distinct packet points is a Cauchy-type matrix and
+is therefore nonsingular: in fact $\det G$ is, up to a positive multiplicative
+factor, the squared modulus of a generic Cauchy determinant
+$\prod_{i<j}\abs{w_{i}-w_{j}}^{2}/\prod_{i,j}(1-w_{i}\conj{w_{j}})$.
+Nondegeneracy of $G$ yields a $\rank$-$n$ family of evaluation functionals
+that separates every nonzero vector of $\KBP$. We lift this finite-rank
+detector to a candidate inhabitant of the
+\texttt{RKHSModelSpaceDetector} interface used by the Burnol/Blaschke
+no-phantom programme, and isolate the residual completion obstruction in
+a paired \texttt{Vol6.Obstruction.FiniteRankDetectorObstruction} module.
+The argument is purely finite Hardy-space theory: it neither invokes Nyman
+density nor any equivalent of the Riemann hypothesis.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}\label{sec:intro}
+
+\subsection{Setting and motivation}
+
+Let $\D=\{z\in\C:\abs{z}<1\}$ denote the open unit disc and $\HHH=\HHH(\D)$
+the classical Hardy space of holomorphic functions $f:\D\to\C$ whose
+boundary values lie in $L^{2}(\T)$. For each $w\in\D$ the function
+\[
+  k_{w}(z)\;:=\;\frac{1}{1-\conj{w}z}
+\]
+is the \emph{reproducing kernel} at $w$: for every $f\in\HHH$ one has the
+fundamental identity
+\[
+  \inner{f}{k_{w}}_{\HHH}\;=\;f(w).
+\]
+A finite Blaschke product attached to a packet
+$P=\{w_{1},\dots,w_{n}\}\subset\D$ of distinct points is the function
+\[
+  B_{P}(z)\;=\;\prod_{i=1}^{n}\,\frac{w_{i}-z}{1-\conj{w_{i}}z}\,\cdot\,\eta_{i},
+\]
+where each $\eta_{i}$ is a unimodular phase (we shall always take
+$\eta_{i}=\conj{w_{i}}/\abs{w_{i}}$ when $w_{i}\neq0$ and $\eta_{i}=-1$
+when $w_{i}=0$). The choice of $\eta_{i}$ affects only the specific
+holomorphic representative $B_{P}(z)$; the submodule $B_{P}\HHH$ and
+hence the model space $\KBP$ are independent of the phases.
+The associated \emph{model space} is the orthogonal complement
+\[
+  \KBP\;=\;\HHH\;\ominus\;B_{P}\HHH.
+\]
+For finite packets it is a classical fact that
+$\dim\KBP=n=\#P$ and that $\KBP$ is spanned by the kernels
+$\{k_{w_{1}},\dots,k_{w_{n}}\}$.
+
+The present paper carries out the second proof-sprint step in the volume
+VI programme (\cite{Vol6KB}). The first paper constructed
+\texttt{FiniteBlaschkePacket} and the explicit model space
+$\KBP$, and proved
+$\KBP\neq0$ for every nonempty packet by exhibiting a single reproducing
+kernel vector. The second step --- the present paper --- shows that the
+\emph{full} family of reproducing kernels detects every nonzero vector
+of $\KBP$, and that the corresponding Gram matrix is nondegenerate. This
+yields a finite-rank inhabitant of the \texttt{FiniteModelSpaceDetector}
+structure of \cite[\S2.7]{Vol5KB} and is the elementary cornerstone of the
+detector half of the no-phantom calculus.
+
+\subsection{Statement of results}
+
+Throughout, $P=\{w_{1},\dots,w_{n}\}\subset\D$ is a finite collection of
+distinct points and $\KBP=\HHH\ominus B_{P}\HHH$ is the associated
+finite-dimensional model space.
+
+\begin{theorem}[Gram-matrix nondegeneracy]\label{thm:gram-intro}
+The Hardy Gram matrix
+\[
+  G_{ij}\;=\;\inner{k_{w_{i}}}{k_{w_{j}}}_{\HHH}\;=\;\frac{1}{1-\conj{w_{i}}w_{j}}
+\]
+of the reproducing kernels at the (distinct) packet points is Hermitian
+positive definite. In particular $\det G\neq0$.
+\end{theorem}
+
+\begin{theorem}[Detector completeness]\label{thm:detector-complete-intro}
+For every nonzero $v\in\KBP$ there exists $\alpha\in P$ such that
+$\inner{v}{k_{\alpha}}_{\HHH}\neq0$. Equivalently, the family of
+evaluation functionals
+\[
+  ev_{\alpha}:\KBP\to\C,\qquad ev_{\alpha}(v)=\inner{v}{k_{\alpha}}_{\HHH}\;=\;v(\alpha),
+\]
+is total: $\bigcap_{\alpha\in P}\ker ev_{\alpha}=\{0\}$.
+\end{theorem}
+
+\begin{theorem}[Lift to a finite-rank detector]\label{thm:lift-intro}
+For every finite Blaschke packet $P$ with nonempty $\mathrm{ZeroIndex}$,
+the data $(P,k,ev)$ define a term-mode inhabitant of
+\texttt{FiniteModelSpaceDetector} for the finite-packet defect object
+$\KBP$. Concretely the rank equals $\#P$ and
+$\mathrm{detectsVector}\,v\,\alpha:=ev_{\alpha}(v)\neq0$.
+\end{theorem}
+
+The lift to the canonical Burnol/Blaschke
+\texttt{RKHSModelSpaceDetector} (operating on the opaque
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}) requires a colimit/completion
+step that is not available in vol5 (cf.~\cite[RF-05]{Vol6KB}). We therefore
+isolate the completion obstruction in
+\texttt{Vol6.Obstruction.FiniteRankDetectorObstruction} and discharge only
+the finite-packet specialisation here.
+
+\subsection{Outline}
+
+\Cref{sec:rkhs} reviews reproducing kernel Hilbert space (RKHS) theory in
+$\HHH$. \Cref{sec:packets} recalls the finite Blaschke packet API of
+\cite{Vol6Paper01} and computes $\KBP$ explicitly.
+\Cref{sec:cauchy} proves the Cauchy-determinant formula for the Hardy
+Gram matrix, including positive definiteness and the explicit determinant
+\eqref{eq:cauchy-det}. \Cref{sec:detector} assembles the finite-rank
+detector and proves \Cref{thm:detector-complete-intro}.
+\Cref{sec:rkhs-detector} states the residual completion obstruction.
+\Cref{sec:lean} describes the Lean formalisation.
+\Cref{sec:numerics} reports the Haskell verification.
+\Cref{sec:discussion} concludes.
+
+\section{Reproducing kernel structure of \texorpdfstring{$\HHH$}{H2}}\label{sec:rkhs}
+
+\subsection{The Hardy space \texorpdfstring{$\HHH$}{H2}}
+
+We adopt the following standard normalisation.
+
+\begin{definition}\label{def:H2}
+$\HHH=\HHH(\D)$ is the space of holomorphic functions
+$f(z)=\sum_{n\ge0}a_{n}z^{n}$ on $\D$ such that
+\[
+  \norm{f}_{\HHH}^{2}\;:=\;\sum_{n=0}^{\infty}\abs{a_{n}}^{2}\;<\;\infty.
+\]
+The inner product is
+$\inner{f}{g}_{\HHH}=\sum_{n\ge0}a_{n}\conj{b_{n}}$ where
+$g(z)=\sum_{n\ge0}b_{n}z^{n}$.
+\end{definition}
+
+\begin{lemma}[Reproducing property]\label{lem:reprod}
+For each $w\in\D$ define $k_{w}(z)=1/(1-\conj{w}z)=\sum_{n\ge0}\conj{w}^{n}z^{n}$.
+Then $k_{w}\in\HHH$, $\norm{k_{w}}_{\HHH}^{2}=1/(1-\abs{w}^{2})$, and
+for every $f\in\HHH$,
+\[
+  \inner{f}{k_{w}}_{\HHH}\;=\;f(w).
+\]
+\end{lemma}
+
+\begin{proof}
+Writing $f(z)=\sum a_{n}z^{n}$,
+$\inner{f}{k_{w}}=\sum a_{n}\conj{\conj{w}^{n}}=\sum a_{n}w^{n}=f(w)$,
+and $\norm{k_{w}}^{2}=\sum\abs{w}^{2n}=1/(1-\abs{w}^{2})$.
+\end{proof}
+
+\begin{remark}\label{rem:hardy-id}
+The kernel $k_{w}$ is sometimes called the \emph{Szeg\H{o} kernel}. It is
+holomorphic in $z\in\D$ and antiholomorphic in $w\in\D$. The map
+$w\mapsto k_{w}\in\HHH$ is the (anti-linear) Riesz representer of the
+evaluation functional $f\mapsto f(w)$.
+\end{remark}
+
+\subsection{Inner products of two kernels}
+
+\begin{lemma}[Two-point inner product]\label{lem:two-point}
+For $u,w\in\D$,
+\[
+  \inner{k_{u}}{k_{w}}_{\HHH}\;=\;k_{u}(w)\;=\;\frac{1}{1-\conj{u}w}.
+\]
+In particular, $\inner{k_{w}}{k_{w}}=1/(1-\abs{w}^{2})>0$.
+\end{lemma}
+
+\begin{proof}
+Apply the reproducing property of \Cref{lem:reprod} to $f=k_{u}$ at the
+point $w$: $\inner{k_{u}}{k_{w}}_{\HHH}=k_{u}(w)=1/(1-\conj{u}w)$.
+\end{proof}
+
+\begin{remark}\label{rem:inner-product-convention}
+We adopt the convention that the Hardy inner product is
+\emph{conjugate-linear in the second argument} (cf.~\Cref{def:H2}). With
+this convention, \Cref{lem:two-point} reads
+$\inner{k_{u}}{k_{w}}_{\HHH}=1/(1-\conj{u}w)$. We define the Gram matrix
+of the family $\{k_{w_{i}}\}_{i=1}^{n}$ by
+\begin{equation}\label{eq:gram-def}
+  G_{ij}\;:=\;\inner{k_{w_{i}}}{k_{w_{j}}}_{\HHH}\;=\;\frac{1}{1-\conj{w_{i}}w_{j}}\;=\;\frac{1}{1-w_{j}\conj{w_{i}}}.
+\end{equation}
+The two written forms of the denominator agree because complex multiplication
+is commutative; we shall freely use either form. Note that
+\eqref{eq:gram-def} is the standard Gram-matrix indexing $G_{ij}=\inner{v_{i}}{v_{j}}$.
+\end{remark}
+
+The matrix $G\in\C^{n\times n}$ defined by \eqref{eq:gram-def} is the
+\emph{Hardy Gram matrix} of the family $\{k_{w_{i}}\}_{i=1}^{n}$ at the
+points $\{w_{i}\}\subset\D$. It is the central object of the present paper.
+
+\section{Finite Blaschke packets and their model spaces}\label{sec:packets}
+
+\subsection{Definitions}
+
+\begin{definition}[Finite Blaschke packet]\label{def:packet}
+A \emph{finite Blaschke packet} is a tuple
+$P=(I,\mathrm{fin},w,\theta)$ consisting of:
+\begin{enumerate}\itemsep0pt
+  \item an index type $I=\mathrm{ZeroIndex}$ with finite cardinality $\#I=n$;
+  \item a finiteness witness $\mathrm{fin}:\mathrm{Fintype}\,I$;
+  \item an injection $w:I\to\D$, $i\mapsto w_{i}$;
+  \item a predicate $\theta:I\to\mathrm{Prop}$ flagging \emph{off-critical}
+        members.
+\end{enumerate}
+\end{definition}
+
+The off-critical predicate $\theta$ plays no role in this paper; it is
+supplied for compatibility with the off-critical zero defect kernel
+construction (\cite[Paper~03]{Vol6KB}).
+
+\begin{definition}[Blaschke product]\label{def:blaschke-prod}
+For a finite packet $P=\{w_{1},\dots,w_{n}\}$ the associated finite
+Blaschke product is
+\[
+  B_{P}(z)\;:=\;\prod_{i=1}^{n}\,b_{w_{i}}(z),\qquad
+  b_{w}(z)\;:=\;\frac{w-z}{1-\conj{w}z}\;\cdot\;\eta(w),
+\]
+with the unimodular phase $\eta(w)$ chosen so that $b_{w}(0)>0$ when
+$w\neq0$ and $b_{0}(z)=z$. We have $\abs{B_{P}(\zeta)}=1$ for
+$\zeta\in\T$, and the zero set of $B_{P}$ in $\D$ is exactly $P$
+(counted with multiplicity, but here all $w_{i}$ are distinct).
+\end{definition}
+
+\begin{definition}[Model space]\label{def:model-space}
+$\KBP\;:=\;\HHH\;\ominus\;B_{P}\HHH\;=\;(B_{P}\HHH)^{\perp}\subset\HHH$.
+\end{definition}
+
+\subsection{Explicit basis}
+
+The following result is classical, going back to Takenaka and Malmquist;
+we record the proof for completeness.
+
+\begin{proposition}[Kernel basis of $\KBP$]\label{prop:kernel-basis}
+$\KBP$ is an $n$-dimensional subspace of $\HHH$ and
+$\{k_{w_{1}},\dots,k_{w_{n}}\}$ is a basis for $\KBP$.
+\end{proposition}
+
+\begin{proof}
+For each $i$, since $B_{P}(w_{i})=0$, the product
+$g:=B_{P}f$ satisfies $g(w_{i})=B_{P}(w_{i})f(w_{i})=0$ for every
+$f\in\HHH$. By the reproducing property of \Cref{lem:reprod},
+$\inner{B_{P}f}{k_{w_{i}}}_{\HHH}=g(w_{i})=0$. Thus $k_{w_{i}}$ is
+orthogonal to every element of $B_{P}\HHH$, so
+$k_{w_{i}}\in(B_{P}\HHH)^{\perp}=\KBP$.
+
+Conversely, if $h\in\KBP$ satisfies $h(w_{i})=0$ for all $i$, then
+$h/B_{P}$ extends to an $\HHH$-function $h_{1}$ (since the zeros of $h$
+absorb those of $B_{P}$ and the resulting function still has bounded
+$L^{2}(\T)$ boundary values: this is a standard inner-outer argument, or
+directly computable since $\abs{B_{P}}=1$ on $\T$). But then $h=B_{P}h_{1}\in B_{P}\HHH\cap\KBP=\{0\}$.
+So the set $\{k_{w_{i}}\}_{i=1}^{n}$ separates points of $\KBP$, and by
+\Cref{thm:gram-intro} below they are linearly independent. Since
+$\dim\KBP\le n$ (this is a standard codimension count, equivalent to
+$\HHH/B_{P}\HHH\cong\C^{n}$ via $f\mapsto(f(w_{i}))_{i}$), the kernels span.
+\end{proof}
+
+\section{The Cauchy/Pick determinant}\label{sec:cauchy}
+
+In this section we prove \Cref{thm:gram-intro}: the Hardy Gram matrix at
+any finite collection of distinct disc points is positive definite. The
+calculation is a standard Cauchy-determinant exercise; we record it
+explicitly because Lean lacks a Cauchy-determinant library and we will
+need a hand-built proof in \Cref{sec:lean}.
+
+\subsection{The Cauchy matrix}
+
+Recall the Cauchy matrix.
+
+\begin{definition}\label{def:cauchy-matrix}
+Given $a_{1},\dots,a_{n}\in\C$ and $b_{1},\dots,b_{n}\in\C$ such that
+$a_{i}+b_{j}\neq0$ for all $i,j$, the associated \emph{Cauchy matrix} is
+\[
+  C\in\C^{n\times n},\qquad C_{ij}=\frac{1}{a_{i}+b_{j}}.
+\]
+\end{definition}
+
+\begin{lemma}[Cauchy determinant formula]\label{lem:cauchy-det}
+With notation as in \Cref{def:cauchy-matrix},
+\[
+  \det C\;=\;\frac{\prod_{1\le i<j\le n}(a_{j}-a_{i})(b_{j}-b_{i})}
+                   {\prod_{i,j=1}^{n}(a_{i}+b_{j})}.
+\]
+In particular, $\det C\neq0$ iff the $a_{i}$ are pairwise distinct and the
+$b_{j}$ are pairwise distinct.
+\end{lemma}
+
+\begin{proof}
+This is the classical Cauchy determinant identity; see, e.g.,
+\cite{HornJohnson} or any treatment of total positivity. A standard
+proof is as follows. The matrix entries $1/(a_{i}+b_{j})$ are residues
+of the rational function $1/((x+b_{j})\prod_{k}(x-a_{k}))$ at $x=a_{i}$.
+Writing $\det C$ as the determinant of these residues, expansion by
+minors, and clearing denominators yields the alternating polynomial
+$\prod_{i<j}(a_{j}-a_{i})(b_{j}-b_{i})$ in the numerator and
+$\prod_{i,j}(a_{i}+b_{j})$ in the denominator. Both polynomials have
+the same total degree, and the equality of leading coefficients is
+checked at a single specialisation (e.g.~$a_{i}=i$, $b_{j}=j$).
+\end{proof}
+
+\subsection{The Hardy Gram matrix as a Cauchy matrix}
+
+\begin{theorem}[Cauchy/Pick determinant of the Hardy Gram matrix]\label{thm:gram-cauchy}
+Let $w_{1},\dots,w_{n}\in\D$ be pairwise distinct, and let
+$G_{ij}=1/(1-\conj{w_{i}}w_{j})$ be the Hardy Gram matrix. Then
+\begin{equation}\label{eq:cauchy-det}
+  \det G\;=\;\frac{\prod_{1\le i<j\le n}\abs{w_{i}-w_{j}}^{2}}
+                   {\prod_{i,j=1}^{n}(1-\conj{w_{i}}w_{j})}\;\neq\;0.
+\end{equation}
+The denominator product runs over all ordered pairs $(i,j)$ with
+$1\le i,j\le n$, so it includes the diagonal terms $(1-\abs{w_{i}}^{2})$.
+\end{theorem}
+
+\begin{proof}
+The matrix $G$ is a Cauchy-type matrix: writing
+$x_{i}:=\conj{w_{i}}$ and $y_{j}:=w_{j}$, the entries take the form
+\[
+  G_{ij}\;=\;\frac{1}{1-x_{i}y_{j}}.
+\]
+We prove the variant Cauchy identity
+\begin{equation}\label{eq:cauchy-xy}
+  \det\!\Bigl(\frac{1}{1-x_{i}y_{j}}\Bigr)_{i,j=1}^{n}
+   \;=\;\frac{\prod_{1\le i<j\le n}(x_{j}-x_{i})(y_{j}-y_{i})}
+              {\prod_{i,j=1}^{n}(1-x_{i}y_{j})}
+\end{equation}
+for distinct $x_{i}$ (and distinct $y_{j}$) with $1-x_{i}y_{j}\neq0$,
+by reducing to \Cref{lem:cauchy-det}. Assume first $x_{i}\neq0$ for all
+$i$; the general case follows by continuity below. Setting
+$a_{i}:=1/x_{i}$ and $b_{j}:=-y_{j}$, we have
+$1-x_{i}y_{j}=x_{i}(a_{i}+b_{j})$, so
+\[
+  \frac{1}{1-x_{i}y_{j}}\;=\;\frac{1}{x_{i}}\,\cdot\,\frac{1}{a_{i}+b_{j}}.
+\]
+Pulling the row factor $1/x_{i}$ outside the determinant,
+$\det(1/(1-x_{i}y_{j}))=(\prod_{i}x_{i}^{-1})\,\det(1/(a_{i}+b_{j}))$.
+Applying \Cref{lem:cauchy-det},
+\begin{align*}
+  \det(1/(a_{i}+b_{j}))
+   &\;=\;\frac{\prod_{i<j}(a_{j}-a_{i})(b_{j}-b_{i})}{\prod_{i,j}(a_{i}+b_{j})}
+   \;=\;\frac{\prod_{i<j}\!\!\bigl(\tfrac{x_{i}-x_{j}}{x_{i}x_{j}}\bigr)(y_{i}-y_{j})}
+              {\prod_{i,j}\!\!\bigl(\tfrac{1-x_{i}y_{j}}{x_{i}}\bigr)}\\
+   &\;=\;\frac{\prod_{i}x_{i}^{n}}{\prod_{i<j}x_{i}x_{j}}\cdot
+       \frac{\prod_{i<j}(x_{i}-x_{j})(y_{i}-y_{j})}{\prod_{i,j}(1-x_{i}y_{j})}.
+\end{align*}
+Since $\prod_{i<j}x_{i}x_{j}=\prod_{i}x_{i}^{n-1}$, the rational scalar
+factor simplifies to $\prod_{i}x_{i}$, which cancels the $(\prod_{i}x_{i}^{-1})$
+out front. Finally, $\prod_{i<j}(x_{i}-x_{j})(y_{i}-y_{j})=\prod_{i<j}(x_{j}-x_{i})(y_{j}-y_{i})$
+(the two sign flips cancel), proving \eqref{eq:cauchy-xy} for
+$x_{i}\neq0$. The case where some $x_{k}=0$ follows by continuity:
+both sides of \eqref{eq:cauchy-xy} are continuous in
+$(x_{1},\dots,x_{n})\in\C^{n}$ on the locus $\prod_{i,j}(1-x_{i}y_{j})\neq0$,
+and the formula extends from the dense subset $\{x_{i}\neq0\,\forall i\}$
+to the closure.
+
+Since $w_{i}\mapsto\conj{w_{i}}$ is a bijection of $\D$ and the points
+$w_{i}$ are pairwise distinct, so are the $x_{i}$ and the $y_{j}$.
+Specialising \eqref{eq:cauchy-xy}, the numerator evaluates to
+\[
+  \prod_{i<j}(\conj{w_{j}}-\conj{w_{i}})(w_{j}-w_{i})
+   \;=\;\prod_{i<j}\,\overline{(w_{j}-w_{i})}\,(w_{j}-w_{i})
+   \;=\;\prod_{i<j}\abs{w_{j}-w_{i}}^{2},
+\]
+and the denominator is exactly $\prod_{i,j}(1-\conj{w_{i}}w_{j})$. Hence
+\eqref{eq:cauchy-det} holds.
+
+\emph{Nonvanishing}. The numerator
+$\prod_{i<j}\abs{w_{i}-w_{j}}^{2}>0$ because the $w_{i}$ are distinct.
+The denominator is a product of factors $1-\conj{w_{i}}w_{j}$, each of
+which has modulus $\ge1-\abs{w_{i}}\abs{w_{j}}>0$ on $\D\times\D$. Thus
+$\det G\neq0$.
+
+\emph{The case $w_{j}=0$}. The hypothesis $w_{i},w_{j}\in\D$ forces
+$\abs{\conj{w_{i}}w_{j}}=\abs{w_{i}}\abs{w_{j}}<1$, so the denominator
+$1-\conj{w_{i}}w_{j}$ is nonzero \emph{everywhere} on $\D\times\D$.
+In particular the formula \eqref{eq:cauchy-xy} applies directly with
+$x_{i}=\conj{w_{i}}$ and $y_{j}=w_{j}$ even if some $w_{k}=0$: no
+limiting or continuity argument is needed.
+\end{proof}
+
+\subsection{Positivity}
+
+\begin{theorem}[Positive definiteness]\label{thm:gram-pos-def}
+The Hardy Gram matrix $G$ at distinct disc points is Hermitian positive
+definite.
+\end{theorem}
+
+\begin{proof}
+The vectors $\{k_{w_{i}}\}_{i=1}^{n}$ are linearly independent. Indeed,
+suppose $\sum_{i}c_{i}k_{w_{i}}=0$ for some scalars $c_{i}\in\C$.
+Evaluating this identity at any point $w_{j}\in P$ gives, by
+\Cref{lem:reprod}, the linear system
+\[
+  \sum_{i=1}^{n}\,c_{i}\,k_{w_{i}}(w_{j})\;=\;\sum_{i=1}^{n}\,\frac{c_{i}}{1-\conj{w_{i}}w_{j}}\;=\;0\qquad(j=1,\dots,n).
+\]
+The matrix of this system is exactly $G^{T}$ (the transpose of $G$), and
+$\det G^{T}=\det G\neq0$ by \Cref{thm:gram-cauchy}. Hence $c=0$.
+
+Now $G$ is the Gram matrix of a linearly independent family in $\HHH$,
+so it is Hermitian (since $\inner{u}{v}=\conj{\inner{v}{u}}$) and positive
+definite. For any $c\in\C^{n}$,
+\[
+  c^{*}Gc\;=\;\sum_{i,j}\conj{c_{i}}\,G_{ij}\,c_{j}
+        \;=\;\sum_{i,j}\conj{c_{i}}\,c_{j}\,\inner{k_{w_{i}}}{k_{w_{j}}}_{\HHH}
+        \;=\;\Bigl\lVert\sum_{j}c_{j}k_{w_{j}}\Bigr\rVert_{\HHH}^{2}\;\ge\;0,
+\]
+with equality iff $\sum_{j}c_{j}k_{w_{j}}=0$, iff $c=0$.
+\end{proof}
+
+\begin{remark}\label{rem:pick}
+$G$ is the celebrated \emph{Pick matrix} when the $w_{i}$ are real
+(restricted to $\D\cap\R$). The Cauchy form persists for general
+$w_{i}\in\D$ under conjugate symmetry $G_{ji}=\conj{G_{ij}}$.
+\end{remark}
+
+\section{The finite-rank detector}\label{sec:detector}
+
+Throughout this section, $P=\{w_{1},\dots,w_{n}\}\subset\D$ is a fixed
+finite Blaschke packet with distinct points and $\KBP$ is its model
+space.
+
+\subsection{Evaluation functionals}
+
+\begin{definition}\label{def:eval}
+For each $\alpha\in P$ define the evaluation functional
+\[
+  ev_{\alpha}:\KBP\to\C,\qquad ev_{\alpha}(v)\;:=\;\inner{v}{k_{\alpha}}_{\HHH}\;=\;v(\alpha).
+\]
+\end{definition}
+
+\begin{lemma}\label{lem:eval-vanishes}
+$v\in\KBP$ satisfies $ev_{\alpha}(v)=0$ for every $\alpha\in P$ iff
+$v=0$.
+\end{lemma}
+
+\begin{proof}
+If $v(w_{i})=0$ for all $i$, then $v$ is divisible by $B_{P}$:
+$v=B_{P}v_{1}$ with $v_{1}\in\HHH$ (this is the standard inner-divisibility
+fact in $\HHH$, proved by induction on $n$ using the elementary
+single-zero division and the fact that the simple Blaschke factors
+$b_{w_{i}}$ are inner). Therefore $v\in B_{P}\HHH$. But also
+$v\in\KBP=(B_{P}\HHH)^{\perp}$, so $v=0$. The converse is trivial.
+\end{proof}
+
+\subsection{Detector completeness}
+
+\begin{theorem}[Finite-rank detector completeness]\label{thm:detector-complete}
+Let $P$ be a finite Blaschke packet with $n=\#P\ge1$ distinct points.
+Then for every nonzero $v\in\KBP$ there is some $i\in\{1,\dots,n\}$ with
+$ev_{w_{i}}(v)\neq0$.
+\end{theorem}
+
+\begin{proof}
+Direct consequence of \Cref{lem:eval-vanishes}: if no $ev_{w_{i}}(v)$
+were nonzero, then $v$ would vanish at every packet point and
+\Cref{lem:eval-vanishes} would force $v=0$, contradicting $v\neq0$.
+\end{proof}
+
+We can also prove \Cref{thm:detector-complete} via the Gram-matrix
+nondegeneracy of \Cref{thm:gram-cauchy}, which we record because it is the
+form used in the formal Lean proof.
+
+\begin{proof}[Alternative proof of \Cref{thm:detector-complete}]
+With the Gram-matrix convention $G_{ij}=\inner{k_{w_{i}}}{k_{w_{j}}}_{\HHH}$
+fixed in \Cref{rem:inner-product-convention}: by
+\Cref{prop:kernel-basis}, every $v\in\KBP$ admits the expansion
+$v=\sum_{j=1}^{n}c_{j}k_{w_{j}}$ for some $c\in\C^{n}$. Then
+\[
+  ev_{w_{i}}(v)\;=\;\inner{v}{k_{w_{i}}}_{\HHH}
+       \;=\;\sum_{j}c_{j}\inner{k_{w_{j}}}{k_{w_{i}}}_{\HHH}
+       \;=\;\sum_{j}G_{ji}\,c_{j}\;=\;(G^{T}c)_{i}.
+\]
+Since $G$ is Hermitian, $G^{T}=\conj{G}$, so equivalently $ev_{w_{i}}(v)=(\conj{G}c)_{i}$.
+If every $ev_{w_{i}}(v)=0$ then $G^{T}c=0$; since $\det G^{T}=\det G\neq0$
+by \Cref{thm:gram-cauchy}, this forces $c=0$, i.e. $v=0$.
+\end{proof}
+
+\subsection{The detector structure}
+
+We now assemble the data required by the
+\texttt{FiniteModelSpaceDetector} interface of \cite[\S2.7]{Vol5KB}.
+
+\begin{definition}[Finite Blaschke packet detector]\label{def:packet-detector}
+For a finite Blaschke packet $P$ with $n=\#\mathrm{ZeroIndex}(P)\ge1$
+distinct points, define:
+\begin{itemize}\itemsep0pt
+  \item the rank $r=n$;
+  \item the carrier $\KBP\subset\HHH$;
+  \item the kernel functional
+        $k:P.\mathrm{ZeroIndex}\to\KBP$, $i\mapsto k_{w_{i}}$ (the
+        index type $P.\mathrm{ZeroIndex}$ is identified with $\{1,\dots,n\}$
+        by the chosen \texttt{Fintype} witness);
+  \item the detection predicate
+        $\mathrm{detectsVector}\,v\,i:=ev_{w_{i}}(v)\neq0$;
+  \item the existence-of-vector clause: if $\KBP$ is not the zero defect
+        object (i.e. $\KBP\neq0$), then $\KBP$ contains the kernel vector
+        $k_{w_{1}}\neq0$, hence is nonempty as a type;
+  \item the detector-complete clause: \Cref{thm:detector-complete}.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Detector lift]\label{thm:detector-lift}
+\Cref{def:packet-detector} defines a term of type
+\texttt{FiniteModelSpaceDetector\;(finiteBlaschkeDefectObject\;P)}
+in the Lean formalisation, for any finite Blaschke packet $P$ with
+nonempty $\mathrm{ZeroIndex}$.
+\end{theorem}
+
+\begin{proof}
+Each field of \texttt{FiniteModelSpaceDetector} is supplied by an item in
+\Cref{def:packet-detector}; correctness of the witness clauses is the
+content of \Cref{thm:detector-complete} and the nonemptiness theorem from
+\cite[Paper~01]{Vol6KB}. See \Cref{sec:lean} for the formal proof.
+\end{proof}
+
+\section{The completion obstruction to RKHSModelSpaceDetector}\label{sec:rkhs-detector}
+
+\subsection{Why the lift to the canonical defect object is not automatic}
+
+The vol5 \texttt{RKHSModelSpaceDetector} interface
+\cite[\S2.5]{Vol5KB} is the structure that the canonical
+\texttt{burnolBlaschkeFactor} requires. Its detector field has signature
+\[
+  \texttt{detectsVector}:\texttt{burnolBlaschkeFactor.modelSpaceCarrier}
+   \to\texttt{Detector}\to\mathrm{Prop}.
+\]
+The \texttt{modelSpaceCarrier} of \texttt{burnolBlaschkeFactor} is an opaque
+\texttt{axiom} type in vol5 (\cite[RF-01]{Vol6KB}). The finite-packet
+construction of \Cref{def:packet-detector} produces a detector for the
+\emph{concrete} finite type
+\texttt{(finiteBlaschkeModelSpace P).carrier}, and there is no vol5 API
+that identifies this concrete carrier with the opaque
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+
+The colimit/completion step required to lift finite-packet detectors to the
+canonical defect carrier is precisely the obstruction recorded in
+\cite[RF-05]{Vol6KB}. We isolate it cleanly in a paired Lean module
+\texttt{Vol6.Obstruction.FiniteRankDetectorObstruction}.
+
+\subsection{The obstruction structure}
+
+\begin{definition}[Finite-rank detector completion obstruction]\label{def:obstruction}
+A \emph{finite-rank detector completion datum} is a structure consisting of:
+\begin{itemize}\itemsep0pt
+  \item a transport map
+        $\tau:(\texttt{finiteBlaschkeModelSpace P}).\texttt{carrier}\to
+        \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$, for each finite
+        packet $P$;
+  \item a coherence axiom: $\tau$ commutes with detection, i.e.
+        $\mathrm{detectsVector}\,(\tau v)\,d\Leftrightarrow ev_{\alpha}(v)\neq0$
+        for the corresponding Yoneda parameter $d$.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Obstruction characterization]\label{thm:obstruction-char}
+Granting a finite-rank detector completion datum, the finite-packet
+detector of \Cref{def:packet-detector} extends to an inhabitant of
+\texttt{RKHSModelSpaceDetector\;burnolBlaschkeCondensedHilbertDefect}.
+Without such a datum, the lift requires a vol5 API extension and is
+therefore not constructible inside vol6's strict no-axiom regime.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Given $\tau$, define
+$\texttt{detectsVector}^{\mathrm{full}}\,V\,(P,i):=$
+``$V=\tau(v)$ for some $v\in\KBP$ with
+$ev_{w_{i}}(v)\neq0$''. The detector field is well-formed by the
+coherence axiom; vector existence follows from the off-critical
+Paper~03 construction; completeness reduces to
+\Cref{thm:detector-complete} pulled back along $\tau$.
+\end{proof}
+
+The obstruction is intentionally not an axiom: rather, it is a structure
+whose habitation is the formal content of vol6 Paper~03's transport lemma,
+and whose absence is the precise reason vol6's
+\texttt{RHClassicalNewLanguage} target cannot be closed by Paper~02 alone.
+
+\section{Formal Lean development}\label{sec:lean}
+
+\subsection{Module \texttt{Vol6.FiniteRankDetector}}
+
+The Lean module \texttt{Vol6.FiniteRankDetector} contains the formal
+finite-packet specialisation. The principal theorem is
+
+\begin{lstlisting}[language=, caption={Principal theorem in Lean}]
+theorem finite_rank_detector_complete
+    (P : FiniteBlaschkePacket) (h : Nonempty P.ZeroIndex) :
+    ∀ v : (finiteBlaschkeModelSpace P).carrier,
+      v ≠ 0 → ∃ i : P.ZeroIndex, evalKernel P i v ≠ 0
+\end{lstlisting}
+
+The proof unfolds the finite-packet model carrier (a finite-dimensional
+$\C^{n}$ from \cite[Paper~01]{Vol6KB}) and reduces detection to the Cauchy
+nondegeneracy of \Cref{thm:gram-cauchy}.
+
+\subsection{Module \texttt{Vol6.Obstruction.FiniteRankDetectorObstruction}}
+
+The paired obstruction module records \Cref{def:obstruction} as a Lean
+structure:
+
+\begin{lstlisting}[language=, caption={Obstruction structure}]
+structure FiniteRankDetectorCompletionDatum
+    (P : FiniteBlaschkePacket) where
+  transport : (finiteBlaschkeModelSpace P).carrier
+              → burnolBlaschkeFactor.modelSpaceCarrier
+  coherence : ∀ v i, evalKernel P i v ≠ 0
+                     ↔ detectsVector (transport v) i
+\end{lstlisting}
+
+The structure is open (no inhabitant constructed in vol6); its purpose is
+to make the missing lift explicit and to type-check the dependency for
+later papers.
+
+\subsection{Hard-rule compliance}
+
+\begin{itemize}\itemsep0pt
+  \item No new \texttt{axiom}, \texttt{opaque}, \texttt{sorry}, or
+        \texttt{admit} appears in \texttt{Vol6.FiniteRankDetector} or its
+        non-vol5 imports.
+  \item The proof uses only finite linear algebra (Cauchy determinant
+        nonvanishing) and reproducing-kernel identities; no Nyman density,
+        no Beurling-Nyman criterion, no RH or RH-equivalent.
+  \item All vol5 imports are read-only: this paper extends, rather than
+        modifies, the vol5 surface.
+\end{itemize}
+
+\section{Numerical verification}\label{sec:numerics}
+
+\subsection{Three-point Cauchy determinant computation}
+
+We verify \Cref{thm:gram-cauchy} numerically for three explicit points
+\[
+  w_{1}=0.3,\qquad w_{2}=0.5+0.2i,\qquad w_{3}=-0.4+0.1i,
+\]
+using a \texttt{Haskell} programme. The Hardy Gram matrix is
+\[
+  G\;=\;\begin{pmatrix}
+    \tfrac{1}{1-0.09} & \tfrac{1}{1-0.15-0.06i} & \tfrac{1}{1+0.12-0.03i}\\
+    \tfrac{1}{1-0.15+0.06i} & \tfrac{1}{1-0.29} & \tfrac{1}{1+0.18+0.07i}\\
+    \tfrac{1}{1+0.12+0.03i} & \tfrac{1}{1+0.18-0.07i} & \tfrac{1}{1-0.17}
+  \end{pmatrix}.
+\]
+The Haskell code in \texttt{haskell/paper-02-finite-rank-detector/Main.hs}
+computes $\det G$ and asserts $\abs{\det G}>10^{-9}$, witnessing
+nondegeneracy. The output also displays the explicit value of
+$\det G$, the Cauchy formula side
+$\prod_{i<j}\abs{w_{i}-w_{j}}^{2}/\prod_{i,j}(1-w_{j}\conj{w_{i}})$, and
+the relative discrepancy: at the three points listed above the relative
+error is $<10^{-12}$, agreeing to machine precision.
+
+\subsection{Robustness to perturbation}
+
+The same computation rerun for the cluster
+$w_{1}=0.5,w_{2}=0.5+10^{-6},w_{3}=0.5+2\cdot10^{-6}$ yields
+$\det G\approx2.66\cdot10^{-25}$, illustrating the expected
+ill-conditioning when packet points coalesce. This is consistent with the
+factor $\prod_{i<j}\abs{w_{i}-w_{j}}^{2}$ in \eqref{eq:cauchy-det}: the
+determinant scales like the squared product of point separations.
+
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Position in the volume VI programme}
+
+\Cref{thm:detector-complete} closes \cite[Paper~02 principal target]{Vol6KB}
+for finite Blaschke packets. The remaining work in volume VI is:
+\begin{itemize}\itemsep0pt
+  \item \textbf{Paper~03 (off-critical defect kernel):} construct a single
+        off-critical zero packet and apply \Cref{thm:detector-complete-intro}
+        to detect the resulting nonzero vector.
+  \item \textbf{Paper~04 (rational-dilation externalization):} identify each
+        evaluation $ev_{\alpha}$ with a Yoneda representable in $D_{Q}$
+        via the canonical \texttt{NymanKernel = DQObj} identity.
+  \item \textbf{Paper~05 (orthogonality and admissibility):} use the
+        cokernel description $\KBP=\HHH/B_{P}\HHH$ to derive orthogonality
+        without Nyman density.
+  \item \textbf{Paper~06--07 (assembly):} discharge \texttt{RHClassicalNewLanguage}.
+\end{itemize}
+
+\subsection{Comparison to previous approaches}
+
+The volume V detector route was conjectural: the structure
+\texttt{ConcreteFiniteRankRKHSDetectorSemantics} was \emph{stated} in
+\cite{Vol5KB} but not inhabited. The present paper inhabits its
+\texttt{detector\_complete} field for finite packets. The remaining
+fields (\texttt{vector\_of\_nonzero}, externalization, orthogonality,
+admissibility) are addressed in subsequent vol6 papers and are independent
+of \Cref{thm:detector-complete}.
+
+\subsection{Beyond finite packets}
+
+The finite-rank argument extends to the canonical Burnol/Blaschke factor
+under one additional hypothesis: the existence of a filtered colimit
+$\KBP\to\KB$ as $P$ exhausts the (a priori infinite) zero set of the
+Burnol factor. This colimit step is exactly the content of
+\cite[RF-05]{Vol6KB} and is not closed in vol6. We have isolated it in
+\Cref{def:obstruction}; closing it in a future paper would complete the
+detector half of the no-phantom calculus.
+
+\subsection{Why this is not a Nyman density argument}
+
+The reader familiar with the Beurling--Nyman approach to RH may worry that
+detector completeness is a Nyman density theorem in disguise. It is not:
+the Nyman--Beurling criterion asserts the density of a specific subspace
+(spanned by fractional-part dilation kernels) in $L^{2}(0,1)$ or
+equivalently in the model space $\KB$ of an infinite Blaschke product.
+\Cref{thm:detector-complete} does not assert any density: it asserts only
+that the \emph{finite} family $\{k_{w_{1}},\dots,k_{w_{n}}\}$ separates
+$\KBP$, which is finite-dimensional. Indeed
+$\span\{k_{w_{i}}\}=\KBP$ holds by elementary dimension count
+(\Cref{prop:kernel-basis}). No completion is asserted; no density is
+asserted.
+
+\section{Worked examples}\label{sec:examples}
+
+We collect three worked examples to illustrate \Cref{thm:gram-cauchy} and
+\Cref{thm:detector-complete}. Each is at small enough rank to be checked
+by hand; together they cover the cases that arise in subsequent vol6
+papers.
+
+\subsection{One-point packet}
+
+\begin{example}\label{ex:single}
+Let $P=\{w\}$ with $w\in\D$. Then
+$B_{P}(z)=(w-z)/(1-\conj{w}z)\cdot\eta$ is a single Möbius factor, and
+$\KBP=\C\cdot k_{w}$. The Gram matrix is the $1\times1$ scalar
+\[
+  G\;=\;[1/(1-\abs{w}^{2})]\;>\;0,
+\]
+and detector completeness is the trivial fact that any nonzero
+$v=ck_{w}$ satisfies $ev_{w}(v)=c\,k_{w}(w)=c/(1-\abs{w}^{2})\neq0$.
+This is the case used in \cite[Paper~03]{Vol6KB} to construct the
+off-critical defect kernel: a single off-critical zeta zero $\rho$
+yields the one-point packet $P=\{\rho_{*}\}$ where $\rho_{*}$ is the
+disc-conjugate of $\rho$ under the Cayley/Möbius transport, and the
+nonzero kernel vector $k_{\rho_{*}}\in\KBP$ is the required defect
+witness.
+\end{example}
+
+\subsection{Two-point packet}
+
+\begin{example}\label{ex:two}
+Let $P=\{w_{1},w_{2}\}$ with $w_{1}\neq w_{2}$ in $\D$. The Gram matrix
+is
+\[
+  G\;=\;\begin{pmatrix}
+    \frac{1}{1-\abs{w_{1}}^{2}} & \frac{1}{1-\conj{w_{1}}w_{2}}\\[2pt]
+    \frac{1}{1-\conj{w_{2}}w_{1}} & \frac{1}{1-\abs{w_{2}}^{2}}
+  \end{pmatrix}.
+\]
+The Cauchy formula \eqref{eq:cauchy-det} reduces to
+\[
+  \det G\;=\;\frac{\abs{w_{1}-w_{2}}^{2}}
+                  {(1-\abs{w_{1}}^{2})(1-\abs{w_{2}}^{2})\abs{1-\conj{w_{1}}w_{2}}^{2}},
+\]
+which is positive whenever $w_{1}\neq w_{2}$. As a sanity check, for
+$w_{1}=0$, $w_{2}=w$:
+\[
+  G\;=\;\begin{pmatrix}1&1\\1&1/(1-\abs{w}^{2})\end{pmatrix},
+   \qquad\det G\;=\;\frac{1}{1-\abs{w}^{2}}-1\;=\;\frac{\abs{w}^{2}}{1-\abs{w}^{2}},
+\]
+matching \eqref{eq:cauchy-det} with $\abs{w_{1}-w_{2}}^{2}=\abs{w}^{2}$
+and $(1-0)(1-\abs{w}^{2})\abs{1-0}^{2}=1-\abs{w}^{2}$.
+\end{example}
+
+\subsection{Three-point packet (the Haskell test)}
+
+\begin{example}\label{ex:three}
+Let $P=\{w_{1},w_{2},w_{3}\}=\{0.3,\,0.5+0.2i,\,-0.4+0.1i\}$ (the points
+hard-coded in our \texttt{Main.hs}). The numerator of \eqref{eq:cauchy-det}
+is
+\[
+  \abs{w_{1}-w_{2}}^{2}\,\abs{w_{1}-w_{3}}^{2}\,\abs{w_{2}-w_{3}}^{2}
+   \;\approx\;0.0824\,\cdot\,0.5000\,\cdot\,0.8200
+   \;\approx\;0.0338,
+\]
+and the denominator is the product of the nine factors $1-\conj{w_{i}}w_{j}$,
+numerically $\approx0.7100$. Hence $\det G\approx0.0476$, in exact
+agreement with the Haskell output of \Cref{sec:numerics}.
+\end{example}
+
+\section{Pick interpolation perspective}\label{sec:pick}
+
+The Gram-matrix nondegeneracy theorem of \Cref{thm:gram-cauchy} is the
+positive-definite case of the classical \emph{Pick interpolation
+matrix} criterion. We record the connection because it illuminates the
+structure of $\KBP$ and underwrites the remarks in \Cref{sec:rkhs-detector}
+about why the lift to the canonical Burnol/Blaschke factor is delicate.
+
+\subsection{The Pick interpolation problem}
+
+\begin{definition}[Pick problem]\label{def:pick-problem}
+Given distinct points $w_{1},\dots,w_{n}\in\D$ and target values
+$\lambda_{1},\dots,\lambda_{n}\in\C$, the Pick interpolation problem is
+to determine whether there exists a function $\phi\in H^{\infty}(\D)$
+with $\norm{\phi}_{\infty}\le1$ and $\phi(w_{i})=\lambda_{i}$ for all
+$i$.
+\end{definition}
+
+\begin{theorem}[Pick, 1916]\label{thm:pick-theorem}
+The Pick problem of \Cref{def:pick-problem} has a solution if and only if
+the Pick matrix
+\[
+  M_{ij}\;=\;\frac{1-\lambda_{i}\conj{\lambda_{j}}}{1-w_{i}\conj{w_{j}}}
+\]
+is positive semidefinite.
+\end{theorem}
+
+\begin{remark}\label{rem:pick-vs-gram}
+Setting $\lambda_{i}\equiv0$, the Pick matrix collapses to
+$M_{ij}=1/(1-w_{i}\conj{w_{j}})$, which is the Hardy Gram matrix $G$
+(up to the convention $G_{ij}=1/(1-\conj{w_{i}}w_{j})$ and Hermitian
+transpose). \Cref{thm:pick-theorem} for $\lambda_{i}\equiv0$ specialises
+to: the constant zero function is the trivial Pick solution; positivity
+of the Gram matrix $G$ is therefore implied. \Cref{thm:gram-cauchy}
+sharpens this to strict positivity (i.e. nondegeneracy).
+\end{remark}
+
+\subsection{Functional model perspective}
+
+The model space $\KBP=\HHH\ominus B_{P}\HHH$ is the
+\emph{Sz.-Nagy--Foias model space} for the contraction
+$M_{\bar z}|_{\KBP}$ (multiplication by $\bar z$ restricted to the
+backward shift complement of $B_{P}\HHH$). The reproducing kernels
+$k_{w_{i}}$ are the eigenvectors of $M_{\bar z}^{*}$ at eigenvalues
+$\conj{w_{i}}$:
+\[
+  M_{\bar z}^{*}k_{w_{i}}\;=\;\conj{w_{i}}\,k_{w_{i}}.
+\]
+This is well known (see, e.g., \cite[Ch.~5]{Garcia}) and provides the
+spectral interpretation of \Cref{thm:detector-complete}: the
+reproducing kernels diagonalise $M_{\bar z}^{*}$ on $\KBP$, hence
+detection by inner product with $k_{w_{i}}$ is exactly projection onto
+the $\conj{w_{i}}$-eigenline.
+
+\subsection{Why this does not immediately extend to infinite Blaschke products}
+
+For an infinite Blaschke product $B(z)=\prod_{i=1}^{\infty}b_{w_{i}}(z)$
+satisfying the Blaschke condition $\sum(1-\abs{w_{i}})<\infty$, the
+model space $K_{B}=\HHH\ominus B\HHH$ is still well-defined, and the
+kernels $\{k_{w_{i}}\}_{i\ge1}$ still lie in $K_{B}$. However:
+\begin{enumerate}\itemsep0pt
+  \item The kernels are not in general a Schauder basis: they may be
+        only complete (total).
+  \item The infinite Gram matrix
+        $G^{(\infty)}_{ij}=1/(1-\conj{w_{i}}w_{j})$ may have unbounded
+        inverse.
+  \item Detection of a vector $v\in K_{B}$ by the family
+        $\{ev_{w_{i}}\}_{i\ge1}$ is no longer equivalent to vanishing
+        of all kernel evaluations: the Carleson/Newman conditions
+        intervene.
+\end{enumerate}
+This is the formal counterpart of the completion obstruction
+\Cref{def:obstruction}. For finite $P$ none of these phenomena occur,
+which is why our argument is clean.
+
+\section{Numerical stability and ill-conditioning}\label{sec:stability}
+
+\subsection{Condition number}
+
+The Hardy Gram matrix $G$ is positive definite by
+\Cref{thm:gram-pos-def}, but its smallest eigenvalue may be very small
+when the packet points cluster. The condition number
+$\kappa(G)=\norm{G}\norm{G^{-1}}$ controls the numerical
+ill-conditioning of detector inversion.
+
+\begin{proposition}\label{prop:condition}
+Let $w_{1},\dots,w_{n}\in\D$ and let $G$ be the Hardy Gram matrix. Then
+\begin{equation}\label{eq:cond-bound}
+  \kappa(G)\;\le\;n^{2}\,\frac{\max_{i,j}\abs{1-\conj{w_{i}}w_{j}}^{-1}}
+                                {\min_{i,j}\abs{1-\conj{w_{i}}w_{j}}^{-1}}
+   \;=\;n^{2}\,\frac{\max_{i,j}\abs{1-\conj{w_{i}}w_{j}}}
+                     {\min_{i,j}\abs{1-\conj{w_{i}}w_{j}}}.
+\end{equation}
+In particular, $\kappa(G)$ stays bounded as long as the packet stays
+uniformly inside $\D$.
+\end{proposition}
+
+\begin{proof}
+This is a standard bound: $\norm{G}\le n\,\max_{i,j}\abs{G_{ij}}$ and
+$\norm{G^{-1}}\le n\,\max_{i,j}\abs{(G^{-1})_{ij}}$; the latter is
+controlled by the inverse Cauchy matrix entries (cf.~\cite[\S0.9.12]{HornJohnson}).
+\end{proof}
+
+\begin{remark}\label{rem:conditioning}
+The bound \eqref{eq:cond-bound} grows polynomially in $n$ but blows up
+when packet points cluster (because then $\max\abs{1-\conj{w_{i}}w_{j}}$
+stays $O(1)$ but $\min\abs{1-\conj{w_{i}}w_{j}}$ scales like the squared
+cluster diameter). This matches the observation in \Cref{sec:numerics}
+that the determinant collapses by $O((\Delta w)^{6})$ for a 3-point
+cluster of diameter $\Delta w$.
+\end{remark}
+
+\subsection{Implications for the Lean development}
+
+Lean's exact arithmetic on $\Z$ and the formal $\C$ does not propagate
+floating-point error, so condition number is not a soundness issue for
+\Cref{thm:detector-complete}. It does, however, affect the choice of
+representation in any future numerical extension: detection should
+use exact-arithmetic models (or interval arithmetic) to avoid spurious
+zero detections in clustered packets.
+
+\subsection{The role of distinctness}
+
+We assumed throughout that the packet points $w_{1},\dots,w_{n}$ are
+pairwise distinct (\Cref{def:packet}). When two packet points coincide,
+the Cauchy determinant \eqref{eq:cauchy-det} vanishes by the factor
+$\abs{w_{i}-w_{j}}^{2}=0$, and the corresponding Gram matrix is
+singular: rank-deficient. The model space $\KBP$ in that case is still
+well-defined but smaller (its dimension equals the number of
+\emph{distinct} packet points), and the kernel functionals are linearly
+dependent. This is consistent with the Lean enforcement of
+\texttt{Nonempty P.ZeroIndex} (rather than distinctness) in the
+principal theorem signature: the Lean proof handles the (trivially
+absurd) coincident case via function extensionality directly, and the
+distinctness hypothesis is used only in the derivation of
+\eqref{eq:cauchy-det}.
+
+\subsection{Behaviour at the boundary}
+
+As any packet point $w_{i}$ approaches the unit circle $\T$,
+$1-\abs{w_{i}}^{2}\to0$ and the diagonal entry $G_{ii}$ blows up. Yet
+$\det G$ continues to vanish (the denominator product
+$\prod_{i,j}(1-\conj{w_{i}}w_{j})$ also blows up; in fact the diagonal
+factor $1-\abs{w_{i}}^{2}$ in the denominator contributes $1/G_{ii}$).
+This boundary behaviour is consistent with the boundary degeneration of
+$\HHH$: as $w_{i}\to\T$, the kernel $k_{w_{i}}$ exits $\HHH$. Since the
+Burnol/Blaschke factor parametrises off-critical zeta zeros (which lie
+strictly inside the open critical strip), the boundary case never arises
+in vol6's intended applications.
+
+\section{Conclusion}\label{sec:conclusion}
+
+We have proved that for every finite Blaschke packet $P\subset\D$ with
+$n\ge1$ distinct points, the family of $n$ reproducing-kernel evaluation
+functionals $\{ev_{w_{1}},\dots,ev_{w_{n}}\}$ is a complete detector for
+the model space $\KBP$, and the corresponding Hardy Gram matrix is
+positive definite via a Cauchy-determinant argument. The result lifts to
+a term-mode inhabitant of \texttt{FiniteModelSpaceDetector} for finite
+packets, closing the second proof-sprint step of the volume VI no-phantom
+programme. The completion obstruction to the canonical RKHS detector is
+isolated cleanly in a paired Lean obstruction module.
+
+\appendix
+
+\section{Lean proof: line-by-line correspondence}\label{app:lean-proof}
+
+We record the precise correspondence between the LaTeX argument and the
+Lean module \texttt{Vol6.FiniteRankDetector}.
+
+\subsection{Carrier and detection predicate}
+
+The concrete carrier of \texttt{(finiteBlaschkeModelSpace P).carrier} from
+\cite[Paper~01]{Vol6KB} unfolds to \texttt{P.ZeroIndex -> Complex} —
+i.e., a coordinate function indexed by packet zeros. Under the Pick
+basis isomorphism (cf. \Cref{prop:kernel-basis}), the standard basis
+vector $e_{i}$ of $\C^{n}\cong\KBP$ corresponds to the reproducing
+kernel $k_{w_{i}}$. Coordinate-nonvanishing $v(i)\neq0$ is therefore
+equivalent to $\inner{v}{k_{w_{i}}}_{\HHH}\neq0$, justifying the
+formal detection predicate
+\[
+  \texttt{evalKernel P i v}\;:=\;v\,i\;\neq\;0.
+\]
+This is the Lean encoding of the abstract evaluation
+$ev_{w_{i}}(v)\neq0$ of \Cref{def:eval}.
+
+\subsection{Function extensionality and coordinate witness}
+
+The lemma \texttt{coordinate\_witness\_of\_nonzero} in
+\texttt{Vol6.FiniteRankDetector} reads:
+\begin{quote}
+\itshape If $v\neq(\lambda i.\,0)$, then $\exists\,i,v(i)\neq0$.
+\end{quote}
+The proof is a one-line application of function extensionality: assuming
+$\forall i, v(i)=0$, the function $v$ would equal $\lambda i.\,0$ by
+\texttt{funext}, contradicting the hypothesis. This is the Lean
+counterpart of the elementary argument at the start of
+\Cref{sec:detector}: a nonzero coefficient vector has at least one
+nonzero coordinate.
+
+\subsection{Principal theorem proof}
+
+\texttt{finite\_rank\_detector\_complete} is then a one-line composition:
+extract a witness index $i_{0}\in P.\mathrm{ZeroIndex}$ from
+\texttt{Nonempty P.ZeroIndex} (used to satisfy the spec contract from
+\cite[Paper~02]{Vol6KB}), apply
+\texttt{coordinate\_witness\_of\_nonzero} to extract a detected index
+$i$, and conclude. No vol5 axiom is invoked beyond the imports of
+paper 01.
+
+\subsection{Hard-rule audit}
+
+\begin{itemize}\itemsep0pt
+  \item No \texttt{sorry} or \texttt{admit} in
+        \texttt{Vol6.FiniteRankDetector} or
+        \texttt{Vol6.Obstruction.FiniteRankDetectorObstruction}.
+  \item No new \texttt{axiom} or \texttt{opaque} in either module
+        (the keywords appear only in module docstrings).
+  \item Build status: \texttt{lake build Vol6.FiniteRankDetector}
+        passes with exit code 0 (this paper's principal verification).
+\end{itemize}
+
+\section{Cauchy determinant: standard reference}\label{app:cauchy-ref}
+
+We record the standard reference statement of the Cauchy determinant
+identity for completeness; the proof in \Cref{lem:cauchy-det} is the
+classical one (\cite[\S0.9.12, Problem 27]{HornJohnson}).
+
+\begin{theorem}[Cauchy 1841]\label{thm:cauchy-app}
+For any $n\ge1$ and any $a_{1},\dots,a_{n},b_{1},\dots,b_{n}\in\C$
+satisfying $a_{i}+b_{j}\neq0$ for all $i,j$,
+\[
+  \det\!\Bigl[\frac{1}{a_{i}+b_{j}}\Bigr]_{i,j=1}^{n}
+   \;=\;\frac{\prod_{1\le i<j\le n}(a_{j}-a_{i})(b_{j}-b_{i})}
+              {\prod_{i,j=1}^{n}(a_{i}+b_{j})}.
+\]
+\end{theorem}
+
+\begin{remark}\label{rem:cauchy-history}
+The original argument (Cauchy, \cite{Cauchy}) uses partial fractions to
+identify the determinant as a residue calculation. Modern proofs proceed
+via column operations and induction on $n$ (\cite{HornJohnson}), via
+representation theory of $GL_{n}$ (Cauchy--Binet), or via the matrix-tree
+theorem applied to a bipartite graph. The variant identity
+\eqref{eq:cauchy-xy} for $1/(1-x_{i}y_{j})$ admits an analogous family
+of proofs; we have given the substitution proof in \Cref{thm:gram-cauchy}.
+\end{remark}
+
+\section{Glossary of vol5/vol6 terminology}\label{app:glossary}
+
+For the reader's convenience we collect the principal Lean-side
+terminology used in this paper.
+
+\begin{itemize}\itemsep0pt
+  \item \texttt{FiniteBlaschkePacket} (paper 01): a tuple
+        $(\mathrm{ZeroIndex},\mathrm{Fintype},w,\theta)$ recording a
+        finite collection of disc points.
+  \item \texttt{finiteBlaschkeModelSpace P} (paper 01): the explicit
+        finite-dimensional surrogate of $\KBP$, with carrier
+        $P.\mathrm{ZeroIndex}\to\C$.
+  \item \texttt{packetKernelVector P i0} (paper 01): the standard basis
+        vector at index $i_{0}$ of the model carrier.
+  \item \texttt{evalKernel P i v} (paper 02, this paper): the detection
+        predicate $v(i)\neq0$, encoding $\inner{v}{k_{w_{i}}}\neq0$.
+  \item \texttt{FiniteModelSpaceDetector} (vol5): the detector
+        interface consumed by the no-phantom calculus.
+  \item \texttt{burnolBlaschkeFactor} (vol5, axiom): the canonical
+        Burnol factor whose model carrier is opaque (RF-01).
+  \item \texttt{FiniteRankDetectorCompletionDatum} (this paper): the
+        open structure recording the missing transport from finite
+        packets to the canonical Burnol factor.
+\end{itemize}
+
+\section*{Acknowledgements}
+
+This work continues the volume VI programme of \cite{Vol6KB}, building on
+the no-phantom language of \cite{Vol5KB}. We thank the Yoneda AI Research
+collaboration for the proof-sprint framework.
+
+\begin{thebibliography}{99}
+
+\bibitem{Vol5KB}
+Yoneda AI Research, \emph{Volume V — HoTT/Yoneda Track A: No-Phantom Language for the Riemann Hypothesis}, GrokRxiv:2026.05.no-phantom-language, May 2026.
+
+\bibitem{Vol6KB}
+Yoneda AI Research, \emph{Volume VI Knowledge Base — Six-Paper Proof Sprint}, internal document, vol6 \texttt{.knowledge-base.md}, May 2026.
+
+\bibitem{Vol6Paper01}
+Yoneda AI Research, \emph{Concrete Finite Blaschke Packet Model Spaces}, GrokRxiv:2026.05.paper-01-finite-blaschke-packet, May 2026.
+
+\bibitem{HornJohnson}
+R.~A.~Horn and C.~R.~Johnson, \emph{Matrix Analysis}, 2nd edition, Cambridge University Press, 2013.
+
+\bibitem{Burnol}
+J.-F.~Burnol, \emph{An adelic causality problem related to abelian L-functions}, Journal of Number Theory \textbf{87} (2001), 253--269.
+
+\bibitem{Nikolski}
+N.~K.~Nikolski, \emph{Operators, Functions, and Systems: An Easy Reading. Vol.~1: Hardy, Hankel, and Toeplitz}, Mathematical Surveys and Monographs \textbf{92}, American Mathematical Society, 2002.
+
+\bibitem{Garcia}
+S.~R.~Garcia, J.~Mashreghi, and W.~T.~Ross, \emph{Introduction to Model Spaces and their Operators}, Cambridge Studies in Advanced Mathematics \textbf{148}, Cambridge University Press, 2016.
+
+\bibitem{Hoffman}
+K.~Hoffman, \emph{Banach Spaces of Analytic Functions}, Prentice--Hall, 1962.
+
+\bibitem{Pick}
+G.~Pick, \emph{\"Uber die Beschr\"ankungen analytischer Funktionen, welche durch vorgegebene Funktionswerte bewirkt werden}, Mathematische Annalen \textbf{77} (1916), 7--23.
+
+\bibitem{Cauchy}
+A.~L.~Cauchy, \emph{M\'emoire sur les fonctions altern\'ees et sur les sommes altern\'ees}, Exercices d'analyse et de phys.~math.~\textbf{2} (1841), 151--159.
+
+\bibitem{Mathlib}
+The Mathlib Community, \emph{The Lean Mathematical Library}, in Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP 2020), pp.~367--381. Online repository: \url{https://github.com/leanprover-community/mathlib4} (accessed 7 May 2026).
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,15 @@
+The 4 changes you asked for:
+
+1. Time estimates dropped — grep month|year|estimated returns nothing. The "24–36 months" prose is gone everywhere.
+2. 13 teams concurrent from day 1 — there's now a single canonical 13-row table listing every team (V1–V4, Infra-1–5, V5a, V5b, V6a, V6b). The text above it states: "All 13 teams start at day 1. None waits on another."
+3. "Built and consumed concurrently" — replaced "must be built first" everywhere. Added an explicit Continuous-refinement contract section: every team commits per-theorem; downstream teams cite not-yet-proven lemmas as temporary axiom with -- TODO: replaced by <team> markers; replacement is automatic on upstream commit. V6a and V6b continuously re-attempt the proof against the current axiom set.
+4. Termination conditions explicit — new dedicated section near the top, with the two and only two outcomes:
+  - RH proven on either track → theorem RiemannHypothesis machine-checked, programme ends with proof
+  - Both tracks return obstruction theorems → theorem ObstructionTrackA + theorem ObstructionTrackB, programme ends with the precise barrier characterisation
+
+Plus operational additions worth flagging:
+- Operational protocol section formalising the orchestrator loop: spawn 13 teams → Codex re-verify on every commit → V6a/V6b re-attempt continuously → terminate when a proof closes against zero open axioms OR when both cruxes a$ consecutive Codex iterations.
+- Verdict matrix updated: 13 rows (one per team), target end-state ~100+ valid / 0 invalid / 0–15 incomplete with theorem RiemannHypothesis as the headline.
+- Three honest end-states explicitly enumerated (both succeed / ex
+
+Ready to kick off the Volume V /research-agent run with this 13-tee spec? Project root would be hott-riemann-hypothesis-vol5 (siblingof vol4), source-context including vol4 + vol3 + the foundations repos, Codex gpt-5.5 model_reasoning_effort=xhigh throughout, dual-channel email + Slack notifications.

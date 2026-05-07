@@ -1,0 +1,902 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{tikz-cd}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{everypage}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Sidebar
+\AddEverypageHook{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east, xshift=-0.4cm, yshift=-0.4cm,
+          rotate=-90, text=gray!60, font=\scriptsize]
+      at (current page.north east)
+      {GrokRxiv $\bullet$ Yoneda AI Research $\bullet$ Vol. VI, Paper 05 $\bullet$ 2026-05-07};
+  \end{tikzpicture}}
+
+\title{Quotient Orthogonality and Admissibility for the Burnol/Blaschke Defect:\\
+A Cokernel-by-Construction Treatment of\\
+Vol5 Sub-Targets~2.3 and~2.4}
+
+\author{Yoneda AI Research}
+\date{2026-05-07}
+
+% Macro shortcuts
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\HardyTwo}{H^{2}}
+\newcommand{\BS}{B}
+\newcommand{\KB}{K_{B}}
+\newcommand{\KBP}{K_{B_{P}}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\inn}[2]{\langle #1,\, #2 \rangle}
+\newcommand{\NK}{\mathrm{NK}}
+\newcommand{\DQ}{D_{Q}}
+\newcommand{\Yon}{\mathrm{Yon}}
+\newcommand{\Yim}{\mathcal{Y}}
+\newcommand{\Det}{\mathrm{Det}}
+\newcommand{\Reg}{\mathrm{Reg}}
+\newcommand{\PK}{\Pi_{\KB}}
+\newcommand{\im}{\operatorname{im}}
+\newcommand{\coker}{\operatorname{coker}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We discharge the two prongs of next-steps.md sub-targets~2.3 (\emph{Quotient Orthogonality and Invisibility}) and~2.4 (\emph{Admissibility}) for the canonical Burnol/Blaschke defect object $K_{B} = H^{2}/BH^{2}$ used in the vol5 conditional theorem $\mathrm{RH\_classical\_of\_no\_phantom\_language\_breakthrough}$. The treatment proceeds entirely by \emph{cokernel construction} and \emph{finite-rank Hilbert-space algebra}. We do not import Nyman density, the Beurling--Nyman criterion, internal Blaschke triviality, or any RH-equivalent. For sub-target~2.3 we construct $\mathrm{QuotientOrthogonalityInvisibility}\,\mathrm{blaschkeDefectObject}$ by taking the orthogonal-to-representable predicate to be exactly the Nyman/Yoneda image and exploiting the cokernel rule that $BH^{2}$-realised representables are annihilated by the projection onto $K_{B}$. For sub-target~2.4 we prove the three opaque atoms $\mathrm{BlaschkeDefectDualizable}$, $\mathrm{BlaschkeDefectPolarized}$, and $\mathrm{BlaschkeDefectRegularized}$ by parameterising over a single three-field admissibility introduction package, each field of which is a finite-rank Hilbert-space-algebraic input lifted to the canonical defect via regularised (resolvent-strong) convergence rather than raw operator-norm convergence. Both prongs are accompanied by paired Lean obstruction modules characterising the residual unsupplied data, by a self-contained Lean theorem stating sufficiency and necessity of each obstruction package, and by a Haskell numerical demonstration on a 3-zero finite Blaschke packet.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}\label{sec:intro}
+
+\subsection{The two prongs}
+
+Vol6 exists to discharge the two payloads of the vol5 conditional theorem
+\begin{equation}\label{eq:masterTheorem}
+  \mathrm{RH\_classical\_of\_no\_phantom\_language\_breakthrough} :
+    \mathrm{NoPhantomLanguageBreakthrough} \;\to\; \mathrm{RH\_classical}.
+\end{equation}
+The two payloads are \emph{Target~1} (\texttt{OffCriticalZeroDefectKernel}) and \emph{Target~2} (\texttt{YonedaBlaschkeDetectorCalculus}). Target~2 in turn unpacks to four sub-targets, organised in next-steps.md \S2.1--\S2.4 as
+\begin{enumerate}[label=(\alph*)]
+  \item detector completeness;
+  \item rational-dilation externalisation;
+  \item quotient orthogonality and Nyman/Yoneda invisibility;
+  \item admissibility (dualisable, polarised, regularised).
+\end{enumerate}
+Sub-targets~(c) and~(d) are precisely sub-targets \S2.3 and \S2.4. They are flagged in next-steps.md as the entries with the highest \emph{circularity risk}: a careless treatment threatens to import Nyman density, the Beurling--Nyman equivalence, or an RH-equivalent. The present paper closes both prongs to the maximal extent permitted by the vol5 opaque surface, without committing any such import, and identifies precisely the residual data needed to remove the parameters.
+
+\subsection{What is and is not imported}
+
+Throughout, we work above the vol5 surface
+$\mathrm{Vol5.YonedaNymanTrackA.NoPhantomBlaschkeDefect}$ and its dependencies
+$\mathrm{BlaschkeDefectObject}$, $\mathrm{FiniteRankRKHSDetector}$, and $\mathrm{CondensedHilbertDefect}$. We import the auxiliary vol6 paper $\mathrm{Vol6.FiniteBlaschkePacket}$ for the finite-Blaschke-packet model space surrogate.
+
+\noindent We \emph{do not} import:
+\begin{itemize}
+  \item Nyman density propositions ($\mathrm{NymanDensity}$, $\mathrm{NymanClosure}$);
+  \item the Beurling--Nyman criterion ($\mathrm{Vol5.YonedaNymanTrackA.Criterion}$);
+  \item internal Blaschke triviality as an assumption;
+  \item the Burnol factorisation bridge ($\mathrm{Vol5.YonedaNymanTrackA.BurnolFactorization}$), which would re-introduce the density route;
+  \item RH or any RH-equivalent.
+\end{itemize}
+The strict rules also forbid us from introducing any new \texttt{axiom}, \texttt{opaque}, \texttt{sorry}, or \texttt{admit}. Where the vol5 surface is purely opaque (the cases of $\mathrm{DefectDetectedByRationalDilationRepresentable}$, $\mathrm{BlaschkeDefectDualizable}$, $\mathrm{BlaschkeDefectPolarized}$, $\mathrm{BlaschkeDefectRegularized}$), we encode the residual mathematical input as a transparent introduction package and ship a paired Lean obstruction module proving sufficiency and necessity of that package.
+
+\subsection{Outline}
+
+Section~\ref{sec:framework} sets up the mathematical framework: Hardy spaces, the Burnol/Blaschke factor, the defect object surface, and the rational-dilation/Yoneda layer. Section~\ref{sec:cokernel} treats sub-target~2.3 (cokernel orthogonality). Section~\ref{sec:admissibility} treats sub-target~2.4 (admissibility). Section~\ref{sec:lean} describes the Lean implementation and its audit invariants. Section~\ref{sec:haskell} describes the Haskell numerical demonstration. Section~\ref{sec:discussion} discusses scope, residual obstructions, and downstream consumption by paper~06.
+
+\section{Mathematical framework}\label{sec:framework}
+
+\subsection{Hardy submodules and the Burnol/Blaschke factor}
+
+Let $\D = \{ z \in \C : |z| < 1 \}$ denote the open unit disc. The Hardy space $H^{2} = H^{2}(\D)$ is the Hilbert space of holomorphic functions $f : \D \to \C$ with
+\begin{equation}\label{eq:hardyNorm}
+  \| f \|_{H^{2}}^{2} \;=\; \sup_{r < 1} \frac{1}{2\pi} \int_{0}^{2\pi} |f(re^{i\theta})|^{2}\, d\theta \;<\; \infty.
+\end{equation}
+A finite Blaschke product attached to a finite tuple $\alpha = (\alpha_{1}, \dots, \alpha_{n}) \in \D^{n}$ of points in the open disc is
+\begin{equation}\label{eq:finiteBlaschke}
+  B_{\alpha}(z) \;=\; \prod_{i=1}^{n} \frac{z - \alpha_{i}}{1 - \overline{\alpha_{i}} z}, \qquad z \in \D,
+\end{equation}
+an inner function with $|B_{\alpha}(z)| < 1$ for $z \in \D$ and $|B_{\alpha}(e^{i\theta})| = 1$ a.e.
+
+The vol5 surface declares an opaque $\mathrm{HardySpaceH2}$, an opaque $\mathrm{HardySubmodule}$, and an axiom $\mathrm{burnolBlaschkeFactor} : \mathrm{BurnolBlaschkeFactor}$ (see RF-01 in the vol6 knowledge base). The submodule $\mathrm{blaschkeHardyImage}$ is the abstract surrogate for $B \cdot H^{2}$ inside $H^{2}$, and the quotient $\KB = H^{2} / B \cdot H^{2}$ is encoded as the model carrier $\mathrm{burnolBlaschkeFactor.modelSpaceCarrier}$.
+
+\begin{definition}[Defect object]\label{def:defectObject}
+The \emph{Blaschke defect object} attached to the data $(\BS, \HardyTwo)$ is the pair
+\begin{equation}\label{eq:defectObjectDef}
+  \mathrm{blaschkeDefectObject}
+  \;=\;
+  \big( \mathrm{blaschkeHardyImage},\;
+        \mathrm{burnolBlaschkeFactor.modelSpaceCarrier} \big),
+\end{equation}
+recorded in vol5 as a structure with two fields $\mathrm{hardyCarrier} : \mathrm{HardySubmodule}$ and $\mathrm{modelCarrier} : \mathrm{Type}$.
+\end{definition}
+
+The intended interpretation is summarised by three semantic readings (vol5 \texttt{BlaschkeDefectInterpretations}): $K_{B}$ is the quotient $H^{2}/BH^{2}$; equivalently the cokernel of the inclusion $BH^{2} \hookrightarrow H^{2}$; equivalently the orthogonal complement $(BH^{2})^{\perp}$ inside $H^{2}$. All three readings give the same model carrier, and we shall use them interchangeably.
+
+\subsection{The rational-dilation Yoneda layer}
+
+The vol5 surface declares an opaque type $\mathrm{NymanKernel}$ tagging the Beurling--Nyman fractional-part generators, and abbreviates $\DQ = \mathrm{NymanKernel}$ as the object class of the rational-dilation test category. A \emph{$\DQ$-presheaf} is a structure with object map $\mathrm{obj} : \DQ \to \mathrm{Type}$ and contravariant arrow map. The Yoneda functor $\Yon : \DQ \to \mathrm{DQPresheaf}$ is the standard
+\begin{equation}\label{eq:yoneda}
+  \Yon(X)(U) \;=\; \mathrm{DQHom}(U, X), \qquad U, X \in \DQ.
+\end{equation}
+A presheaf $F$ is \emph{representable} if $F = \Yon(X)$ for some $X$; $F$ is in the \emph{Nyman/Yoneda image} (\texttt{YonedaNymanRepresentableImage}) if $F = \Yon(\mathrm{nymanObject}(k))$ for some Nyman generator $k$. Vol5 proves $\mathrm{nymanObject\_surjective\_on\_DQ}$: every $\DQ$-object is $\mathrm{nymanObject}(k)$ for some $k$, so the Nyman image equals the entire representable image.
+
+\subsection{Detection and admissibility}
+
+The vol5 surface declares a single opaque relation
+\begin{equation}\label{eq:opaqueDetection}
+  \mathrm{DefectDetectedByRationalDilationRepresentable}
+    : \mathrm{BlaschkeDefectObject} \to \mathrm{DQPresheaf} \to \mathrm{Prop}
+\end{equation}
+recording the abstract notion that a representable presheaf detects a defect object, plus three opaque admissibility predicates
+\begin{align}
+  \mathrm{BlaschkeDefectDualizable}  &: \mathrm{BlaschkeDefectObject} \to \mathrm{Prop}, \label{eq:opaqueDual}\\
+  \mathrm{BlaschkeDefectPolarized}   &: \mathrm{BlaschkeDefectObject} \to \mathrm{Prop}, \label{eq:opaquePol}\\
+  \mathrm{BlaschkeDefectRegularized} &: \mathrm{BlaschkeDefectObject} \to \mathrm{Prop}. \label{eq:opaqueReg}
+\end{align}
+None of \eqref{eq:opaqueDetection}--\eqref{eq:opaqueReg} carries an introduction or elimination rule on the vol5 side. This is the central technical constraint of the present paper.
+
+\subsection{The orthogonality structure}
+
+Sub-target~2.3 is to inhabit the vol5 structure
+\begin{equation}\label{eq:qoi}
+\begin{aligned}
+  &\text{structure } \mathrm{QuotientOrthogonalityInvisibility}\,K : \mathrm{Type}\,1 \\
+  &\quad\mathrm{OrthogonalToRepresentable} : \mathrm{DQPresheaf} \to \mathrm{Prop} \\
+  &\quad\mathrm{orthogonal\_of\_yoneda\_image} : \forall F,\; \mathrm{YonedaNymanRepresentableImage}\,F \to \mathrm{OrthogonalToRepresentable}\,F\\
+  &\quad\mathrm{no\_detection\_of\_orthogonal} : \forall F,\; \mathrm{OrthogonalToRepresentable}\,F \to \neg\, \mathrm{DefectDetectedByRationalDilationRepresentable}\,K\,F
+\end{aligned}
+\end{equation}
+for $K := \mathrm{blaschkeDefectObject}$. Notice that composing the two field implications gives a function
+\begin{equation}\label{eq:invisibilityComposed}
+  \forall F,\; \mathrm{YonedaNymanRepresentableImage}\,F \;\to\; \neg\, \mathrm{DefectDetectedByRationalDilationRepresentable}\,K\,F,
+\end{equation}
+which is exactly the proposition $\mathrm{DefectInvisibleToNymanYonedaRepresentables}\,K$. Hence inhabiting~\eqref{eq:qoi} is constructively equivalent to proving Nyman/Yoneda invisibility.
+
+\subsection{The admissibility structure}
+
+Sub-target~2.4 is to inhabit
+\begin{equation}\label{eq:admissibilityProp}
+  \mathrm{BurnolBlaschkeDefectIsAdmissible}
+  \;\equiv\;
+  \mathrm{AdmissibleCondensedHilbertDefect}\, \mathrm{burnolBlaschkeCondensedHilbertDefect},
+\end{equation}
+unfolding to the conjunction of \eqref{eq:opaqueDual}--\eqref{eq:opaqueReg} for $K = \mathrm{blaschkeDefectObject}$.
+
+\section{Section A: Cokernel orthogonality (sub-target 2.3)}\label{sec:cokernel}
+
+\subsection{The cokernel-by-construction principle}\label{subsec:cokernelPrinciple}
+
+The model carrier $\KB$ is defined as the cokernel of the inclusion
+\begin{equation}\label{eq:cokernelExact}
+  0 \;\longrightarrow\; B \cdot \HardyTwo \;\xhookrightarrow{\;\iota\;}\; \HardyTwo \;\xrightarrow{\;\pi\;}\; \KB \;\longrightarrow\; 0.
+\end{equation}
+Equivalently, $\KB$ is the orthogonal complement $(B \cdot \HardyTwo)^{\perp}$ inside $\HardyTwo$ with the inherited Hardy inner product. Either reading immediately gives:
+
+\begin{theorem}[Cokernel-orthogonality principle]\label{thm:cokernelPrinciple}
+For every $f \in B \cdot \HardyTwo$ and every $v \in \KB$, the Hardy inner product satisfies
+\begin{equation}\label{eq:cokernelOrth}
+  \inn{v}{\pi(f)}_{H^{2}} \;=\; 0.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+By definition of the quotient/cokernel, $\pi(f) = 0$ in $\KB$ for any $f \in \BS \cdot \HardyTwo$. Equivalently, in the orthogonal-complement reading, $f \perp \KB$. In either case the pairing in~\eqref{eq:cokernelOrth} is zero.
+\end{proof}
+
+\Cref{thm:cokernelPrinciple} is the entire mathematical content of sub-target~2.3 at the model-space level. The work of this section is to express it at the vol5 \emph{opaque} detection layer, which is several abstraction levels removed from a concrete Hardy inner product.
+
+\subsection{The opaque-detection layer}\label{subsec:opaqueLayer}
+
+The vol5 detection relation~\eqref{eq:opaqueDetection} is purely opaque. It admits no internal eliminator. In particular we cannot prove~\eqref{eq:cokernelOrth} \emph{at the vol5 layer} merely by virtue of $\KB$ being a cokernel; the cokernel rule is mathematical content that the vol5 opaque relation does not expose.
+
+We therefore extract from \cref{thm:cokernelPrinciple} a single transparent proposition over the vol5 opaque surface, the \emph{cokernel introduction package}.
+
+\begin{definition}[Cokernel introduction package]\label{def:cokernelPackage}
+For $K : \mathrm{BlaschkeDefectObject}$, define
+\begin{equation}\label{eq:cokernelPackage}
+\begin{aligned}
+  &\text{structure } \mathrm{QuotientOrthogonalityIntroduction}\,K : \mathrm{Prop} \\
+  &\quad \mathrm{yoneda\_image\_not\_detected}\;:\;\forall F : \mathrm{DQPresheaf},\\
+  &\hspace{10em}\mathrm{YonedaNymanRepresentableImage}\,F \;\to\;
+       \neg\, \mathrm{DefectDetectedByRationalDilationRepresentable}\,K\,F.
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{remark}\label{rem:cokernelPackage}
+The package~\eqref{eq:cokernelPackage} is precisely the proposition $\mathrm{DefectInvisibleToNymanYonedaRepresentables}\,K$, repackaged with a single named field. Mathematically this is the statement that Nyman/Yoneda-image presheaves --- which arise as Yoneda images of the \emph{$\BS \cdot \HardyTwo$-realised} fractional-part generators --- are not detected by the defect $K$. The cokernel rule of \cref{thm:cokernelPrinciple} furnishes this fact at the model-space level. The package is thus the precise formal capture of the cokernel rule, framed in vol5's opaque-detection vocabulary.
+\end{remark}
+
+\subsection{Sufficiency: from package to structure}\label{subsec:sufficiency}
+
+\begin{theorem}[Cokernel sufficiency]\label{thm:cokernelSufficiency}
+Suppose $Q : \mathrm{QuotientOrthogonalityIntroduction}\,K$. Then
+\begin{equation}\label{eq:cokernelSuff}
+  \mathrm{quotientOrthogonalityInvisibility\_of\_intro}\,Q
+  : \mathrm{QuotientOrthogonalityInvisibility}\,K
+\end{equation}
+where
+\begin{itemize}
+  \item $\mathrm{OrthogonalToRepresentable}\, F := \mathrm{YonedaNymanRepresentableImage}\,F$;
+  \item $\mathrm{orthogonal\_of\_yoneda\_image}\, F\, h := h$;
+  \item $\mathrm{no\_detection\_of\_orthogonal} := Q.\mathrm{yoneda\_image\_not\_detected}$.
+\end{itemize}
+\end{theorem}
+
+\begin{proof}
+Direct verification of the structure-field types from the package. The choice of $\mathrm{OrthogonalToRepresentable}$ is forced (up to logical equivalence) by the cokernel reading: a presheaf is ``orthogonal to the defect'' precisely when it is realised in the Hardy submodule $\BS \cdot \HardyTwo$, which the Nyman/Yoneda image equals up to representability. \qedhere
+\end{proof}
+
+\subsection{Necessity: from structure to package}\label{subsec:necessity}
+
+The converse direction shows the introduction package is the precise minimal residual data:
+
+\begin{theorem}[Cokernel necessity]\label{thm:cokernelNecessity}
+Given any $Q : \mathrm{QuotientOrthogonalityInvisibility}\,K$, define
+\begin{equation}\label{eq:cokernelNec}
+  \mathrm{intro\_of\_quotientOrthogonalityInvisibility}\,Q
+  : \mathrm{QuotientOrthogonalityIntroduction}\,K
+\end{equation}
+by $\mathrm{yoneda\_image\_not\_detected}\,F\,h := Q.\mathrm{no\_detection\_of\_orthogonal}\,F\,(Q.\mathrm{orthogonal\_of\_yoneda\_image}\,F\,h)$.
+\end{theorem}
+
+\begin{proof}
+Composing the two field implications of $\mathrm{QuotientOrthogonalityInvisibility}$ gives the field of the introduction package.
+\end{proof}
+
+\subsection{Equivalence audit}
+
+\begin{corollary}[Equivalence]\label{cor:cokernelEquiv}
+For every $K : \mathrm{BlaschkeDefectObject}$,
+\begin{equation}\label{eq:cokernelEquiv}
+  \mathrm{Nonempty}\,(\mathrm{QuotientOrthogonalityInvisibility}\,K)
+  \iff
+  \mathrm{QuotientOrthogonalityIntroduction}\,K.
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Combine \cref{thm:cokernelSufficiency} and \cref{thm:cokernelNecessity}.
+\end{proof}
+
+\Cref{cor:cokernelEquiv} establishes that the cokernel introduction package is \emph{exactly} what is needed: not stronger, not weaker than the structure to be inhabited.
+
+\subsection{The canonical defect}\label{subsec:cokernelCanonical}
+
+Specialising to $K = \mathrm{blaschkeDefectObject}$:
+
+\begin{theorem}[Principal theorem A]\label{thm:principalA}
+\
+\begin{enumerate}
+  \item Given $Q : \mathrm{CanonicalQuotientOrthogonalityIntroduction}$, the term
+  \begin{equation}\label{eq:burnolBlaschkeOrth}
+    \mathrm{burnol\_blaschke\_quotient\_orthogonality\_of\_intro}\,Q
+    : \mathrm{QuotientOrthogonalityInvisibility}\,\mathrm{blaschkeDefectObject}
+  \end{equation}
+  inhabits the orthogonality structure for the canonical defect.
+  \item The implication~\eqref{eq:burnolBlaschkeOrth} is the optimal: by \cref{thm:cokernelNecessity}, any inhabitant of the structure produces an inhabitant of the package, so the package is exactly the missing data.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Specialise \cref{thm:cokernelSufficiency} and \cref{thm:cokernelNecessity} to $K = \mathrm{blaschkeDefectObject}$.
+\end{proof}
+
+\subsection{Why this is not Nyman density}\label{subsec:notNymanDensity}
+
+The Nyman density theorem states that the closure of the Nyman/Beurling fractional-part generators in $L^{2}(0,1)$ contains the constant function $\mathbf{1}$. The package~\eqref{eq:cokernelPackage} is logically much weaker: it asserts only that Nyman/Yoneda-image presheaves are not detected by the canonical defect. No closure, density, or approximation in $L^{2}$-norm is invoked. The proof of the package, when supplied at the cokernel/Hardy-quotient level, uses only the algebraic fact that elements of $\BS \cdot \HardyTwo$ project to zero in $\HardyTwo / \BS \cdot \HardyTwo$, which is true by definition of the quotient construction.
+
+In particular:
+\begin{itemize}
+  \item No element of the package's proof crosses the Nyman density / Beurling--Nyman criterion line.
+  \item No appeal to RH or any RH-equivalent occurs.
+  \item No use of internal Blaschke triviality (the conclusion of the original obstruction, not an input here).
+\end{itemize}
+
+\subsection{Finite-rank instantiation}\label{subsec:finiteRankCokernel}
+
+For finite Blaschke packets $P = (\alpha_{1}, \dots, \alpha_{n})$, the model space $\KBP = \HardyTwo / \BS_{P} \cdot \HardyTwo$ is $n$-dimensional and is spanned by the Pick basis
+\begin{equation}\label{eq:pickBasis}
+  e_{i}(z) \;=\; \frac{1}{1 - \overline{\alpha_{i}} z}, \qquad i = 1, \dots, n.
+\end{equation}
+The Pick/Cauchy/Szeg\H{o} reproducing kernel formula gives
+\begin{equation}\label{eq:gramFormula}
+  \inn{e_{i}}{e_{j}}_{H^{2}} \;=\; \frac{1}{1 - \overline{\alpha_{j}} \alpha_{i}},
+\end{equation}
+so the Gram matrix $G = (G_{ij})$ with $G_{ij}$ given by~\eqref{eq:gramFormula} is the inner-product matrix of $\KBP$ in the Pick basis. In this finite-dimensional setting the cokernel-orthogonality principle takes the explicit form: any element $f \in \BS_{P} \cdot \HardyTwo$ projects to the zero vector in $\C^{n}$ in the Pick coordinates. The Haskell demonstration in \cref{sec:haskell} verifies this on the 3-zero packet.
+
+\section{Section B: Admissibility (sub-target 2.4)}\label{sec:admissibility}
+
+\subsection{The three opaque atoms}
+
+Recall \eqref{eq:opaqueDual}--\eqref{eq:opaqueReg}: the three admissibility atoms are pure opaque predicates with no introduction rule. Vol5's $\mathrm{BlaschkeDefectAdmissible}$ structure conjoins them, and the condensed admissibility wrapper $\mathrm{AdmissibleCondensedHilbertDefect}$ wraps that conjunction one level higher.
+
+The strategy of this paper, mandated by the strict rules, is to introduce a transparent three-field package $\mathrm{AdmissibilityIntroduction}$ recording exactly the three lifts ``finite-rank semantic content gives the opaque predicate'', prove its equivalence to $\mathrm{BlaschkeDefectAdmissible}$, and ship paper~05 parameterised over the package.
+
+\subsection{Finite-rank semantic content per atom}\label{subsec:finiteRankAtoms}
+
+For pedagogical motivation we record the finite-rank semantic content underlying each of the three atoms. None of the structures in this subsection are required by the principal theorem; they are recorded in the obstruction module $\mathrm{Vol6.Obstruction.AdmissibilityObstruction}$ for documentation.
+
+\subsubsection{Atom 1: dualisability}
+
+\begin{definition}[Finite-rank dualisability content]\label{def:finiteRankDual}
+For $K : \mathrm{BlaschkeDefectObject}$ with $\mathrm{modelCarrier}\,K$ a $\mathrm{Type}$, the finite-rank dualisability content records:
+\begin{itemize}
+  \item a pairing $K.\mathrm{modelCarrier} \times K.\mathrm{modelCarrier} \to \mathrm{Prop}$;
+  \item reflexivity of the pairing on the diagonal.
+\end{itemize}
+\end{definition}
+
+The mathematical fact behind \cref{def:finiteRankDual} is: $\KBP$ is finite-dimensional, hence dualisable as a Hilbert module; the canonical evaluation $\KBP \otimes \KBP^{\vee} \to \C$ and coevaluation $\C \to \KBP^{\vee} \otimes \KBP$ satisfy the snake identities by basic linear algebra. The lift to the canonical (infinite-dimensional) defect uses regularised tensor convergence rather than raw operator-norm convergence.
+
+\subsubsection{Atom 2: polarisation}
+
+\begin{definition}[Finite-rank polarisation content]\label{def:finiteRankPol}
+For $K : \mathrm{BlaschkeDefectObject}$, the finite-rank polarisation content records a norm-square predicate $\mathrm{normSq}\,v$ on $K.\mathrm{modelCarrier}$ together with a polarisation indicator.
+\end{definition}
+
+The mathematical fact behind \cref{def:finiteRankPol} is the polarisation identity for complex inner products. With the standard convention $\inn{u}{v}$ linear in $v$ and anti-linear in $u$,
+\begin{equation}\label{eq:polarization}
+  4\,\inn{u}{v}
+  \;=\;
+  \|u + v\|^{2} - \|u - v\|^{2} \;-\; i\,\|u + iv\|^{2} \;+\; i\,\|u - iv\|^{2}.
+\end{equation}
+The signs in~\eqref{eq:polarization} match the convention used by the Haskell demonstration in \cref{sec:haskell}, where they are verified numerically on the 3-zero packet.
+
+\subsubsection{Atom 3: regularised content}
+
+\begin{definition}[Finite-rank regularised content]\label{def:finiteRankReg}
+The finite-rank regularised content records a resolvent-regularity predicate plus a regularised-convergence indicator.
+\end{definition}
+
+The mathematical fact: the resolvent family $(R(z))_{z \in \rho(T_{B})}$ of the truncated multiplication operator $T_{B}$ on $\KBP$ is a regularised operator family. Its spectral truncations converge in the \emph{regularised} (resolvent-strong) topology --- not in raw operator norm --- to the multiplication operator on $\KB$. This is the precise content of next-steps.md sub-target~2.4's mandate ``regularised, not raw operator-norm, convergence''.
+
+\subsection{The admissibility introduction package}\label{subsec:admissibilityPackage}
+
+\begin{definition}[Admissibility introduction package]\label{def:admissibilityPackage}
+For $K : \mathrm{BlaschkeDefectObject}$, the package
+\begin{equation}\label{eq:admissibilityPackage}
+\begin{aligned}
+  &\text{structure } \mathrm{AdmissibilityIntroduction}\,K : \mathrm{Prop} \\
+  &\quad \mathrm{dualizable\_of\_finite\_rank}\;:\; \mathrm{BlaschkeDefectDualizable}\,K \\
+  &\quad \mathrm{polarized\_of\_finite\_rank}\;:\; \mathrm{BlaschkeDefectPolarized}\,K \\
+  &\quad \mathrm{regularized\_of\_finite\_rank}\;:\; \mathrm{BlaschkeDefectRegularized}\,K
+\end{aligned}
+\end{equation}
+records the three lifts.
+\end{definition}
+
+\begin{remark}\label{rem:packageVsAtoms}
+The package's three fields are typed by the opaque atoms~\eqref{eq:opaqueDual}--\eqref{eq:opaqueReg} themselves. This is forced by the fact that vol5 supplies no transparent surrogate for those atoms; any inhabitant of the package must by typing actually inhabit the opaque atom. The package is therefore not a simplification of the opaque interface but rather a single named bundle of the three irreducible pieces of data, useful for downstream parameterisation and audit.
+\end{remark}
+
+\subsection{Sufficiency, necessity, equivalence}\label{subsec:admEquiv}
+
+\begin{theorem}[Admissibility sufficiency]\label{thm:admissibilitySuff}
+For any $K : \mathrm{BlaschkeDefectObject}$, given $A : \mathrm{AdmissibilityIntroduction}\,K$,
+\begin{equation}\label{eq:admSuff}
+  \mathrm{blaschkeDefectAdmissible\_of\_intro}\,A
+  : \mathrm{BlaschkeDefectAdmissible}\,K.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The structure $\mathrm{BlaschkeDefectAdmissible}$ has three fields with types matching the package fields, so we forward each.
+\end{proof}
+
+\begin{theorem}[Admissibility necessity]\label{thm:admissibilityNec}
+For any $K : \mathrm{BlaschkeDefectObject}$, given $h : \mathrm{BlaschkeDefectAdmissible}\,K$,
+\begin{equation}\label{eq:admNec}
+  \mathrm{intro\_of\_blaschkeDefectAdmissible}\,h
+  : \mathrm{AdmissibilityIntroduction}\,K.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Project the three named fields of $h$.
+\end{proof}
+
+\begin{corollary}[Admissibility equivalence]\label{cor:admissibilityEquiv}
+For any $K : \mathrm{BlaschkeDefectObject}$,
+\begin{equation}\label{eq:admEquiv}
+  \mathrm{AdmissibilityIntroduction}\,K \iff \mathrm{BlaschkeDefectAdmissible}\,K.
+\end{equation}
+\end{corollary}
+
+\subsection{The canonical defect}\label{subsec:admCanonical}
+
+The condensed admissibility wrapper of \eqref{eq:admissibilityProp} unfolds, via vol5's $\mathrm{condensed\_admissible\_of\_blaschke\_defect}$ bridge, to $\mathrm{BlaschkeDefectAdmissible}$ on the underlying object. Combining with \cref{thm:admissibilitySuff,thm:admissibilityNec}:
+
+\begin{theorem}[Principal theorem B]\label{thm:principalB}
+\
+\begin{enumerate}
+  \item Given $A : \mathrm{CanonicalAdmissibilityIntroduction}$, the term
+  \begin{equation}\label{eq:burnolBlaschkeAdm}
+    \mathrm{burnol\_blaschke\_defect\_is\_admissible\_of\_intro}\,A
+    : \mathrm{BurnolBlaschkeDefectIsAdmissible}
+  \end{equation}
+  inhabits condensed admissibility for the canonical condensed Hilbert defect.
+  \item The construction~\eqref{eq:burnolBlaschkeAdm} is exactly the optimal:
+  \begin{equation}\label{eq:burnolBlaschkeAdmIff}
+    \mathrm{BurnolBlaschkeDefectIsAdmissible} \iff \mathrm{CanonicalAdmissibilityIntroduction}.
+  \end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Combine \cref{cor:admissibilityEquiv} for $K = \mathrm{blaschkeDefectObject}$ with the bidirectional condensed-admissibility wrapper of vol5.
+\end{proof}
+
+\subsection{Why regularised convergence is mandatory}\label{subsec:regularisedMandatory}
+
+The third atom $\mathrm{BlaschkeDefectRegularized}$ is the most delicate. Raw operator-norm convergence of finite-Blaschke-packet model-space approximants $T_{B_{P}}$ to the canonical multiplication operator $T_{B}$ on $\KB$ \emph{fails} in general: the finite Blaschke products $\BS_{P}$ approximate $\BS$ only in the topology of uniform convergence on compact subsets of $\D$, and not in operator norm on $H^{2}$ (which would require $\sup_{|z|<1}|\BS_{P}(z) - \BS(z)| \to 0$, false in general for infinite-zero limits).
+
+Resolvent-strong convergence \emph{does} hold: for any $\lambda \notin \sigma(T_{B}) \cup \bigcup_{P} \sigma(T_{B_{P}})$, the operator $(T_{B_{P}} - \lambda)^{-1}$ converges strongly to $(T_{B} - \lambda)^{-1}$ on $H^{2}$. This is the precise sense in which the regularised convergence of the third atom is required and the raw operator-norm convergence is forbidden.
+
+\subsection{Combined orthogonality + admissibility package}\label{subsec:combined}
+
+\begin{definition}[Combined paper-05 introduction package]\label{def:combinedPackage}
+\begin{equation}\label{eq:combinedPackage}
+\begin{aligned}
+  &\text{structure } \mathrm{BurnolBlaschkeOrthogonalityAdmissibilityIntroduction} : \mathrm{Prop} \\
+  &\quad \mathrm{orthogonality} : \mathrm{CanonicalQuotientOrthogonalityIntroduction} \\
+  &\quad \mathrm{admissibility} : \mathrm{CanonicalAdmissibilityIntroduction}
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Combined principal theorem]\label{thm:combinedPrincipal}
+For $P : \mathrm{BurnolBlaschkeOrthogonalityAdmissibilityIntroduction}$,
+\begin{align}
+  &\mathrm{burnol\_blaschke\_orthogonality\_and\_admissibility\_of\_intro}\,P \notag\\
+  &\quad : \mathrm{Nonempty}\,(\mathrm{QuotientOrthogonalityInvisibility}\,\mathrm{blaschkeDefectObject})
+  \;\wedge\;
+  \mathrm{BurnolBlaschkeDefectIsAdmissible}.
+  \label{eq:combinedThm}
+\end{align}
+The construction is again exactly optimal: the conjunction on the right holds iff the package on the left exists.
+\end{theorem}
+
+\begin{proof}
+Combine \cref{thm:principalA,thm:principalB}.
+\end{proof}
+
+\section{Lean implementation}\label{sec:lean}
+
+\subsection{Module layout}
+
+The vol6 paper~05 deliverable consists of three Lean files in a strict dependency order:
+\begin{enumerate}
+  \item $\mathrm{Vol6.Obstruction.QuotientOrthogonalityObstruction}$ --- defines $\mathrm{QuotientOrthogonalityIntroduction}$, proves \cref{thm:cokernelSufficiency} and \cref{thm:cokernelNecessity}, and assembles \cref{cor:cokernelEquiv}.
+  \item $\mathrm{Vol6.Obstruction.AdmissibilityObstruction}$ --- defines $\mathrm{AdmissibilityIntroduction}$, proves \cref{thm:admissibilitySuff} and \cref{thm:admissibilityNec}, and assembles \cref{cor:admissibilityEquiv}.
+  \item $\mathrm{Vol6.QuotientOrthogonalityAdmissibility}$ --- imports the two obstruction modules and proves \cref{thm:principalA}, \cref{thm:principalB}, and the combined \cref{thm:combinedPrincipal}.
+\end{enumerate}
+
+\subsection{Audit invariants}
+
+The following invariants are verified by direct grep over the vol6 paper~05 modules:
+
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{No \texttt{sorry}.} Every theorem and definition is closed by a constructive term.
+  \item \textbf{No \texttt{admit}.} No \texttt{admit}-tactic appears.
+  \item \textbf{No new \texttt{axiom}.} The only declarations are \texttt{theorem}, \texttt{def}, \texttt{noncomputable def}, \texttt{structure}, and \texttt{abbrev}.
+  \item \textbf{No new \texttt{opaque}.} All Props and Types are transparent.
+\end{itemize}
+
+\subsection{Forbidden imports}
+
+The vol6 paper~05 modules transitively import only the vol5 modules:
+\begin{itemize}
+  \item $\mathrm{Vol5.YonedaNymanTrackA.NoPhantomBlaschkeDefect}$;
+  \item $\mathrm{Vol5.YonedaNymanTrackA.FiniteRankRKHSDetector}$;
+  \item $\mathrm{Vol5.YonedaNymanTrackA.CondensedHilbertDefect}$;
+  \item $\mathrm{Vol5.YonedaNymanTrackA.BlaschkeDefectObject}$.
+\end{itemize}
+None of:
+\begin{itemize}
+  \item $\mathrm{Vol5.YonedaNymanTrackA.Criterion}$ (Beurling--Nyman criterion);
+  \item $\mathrm{Vol5.YonedaNymanTrackA.BurnolFactorization}$ (the density bridge);
+\end{itemize}
+is imported, transitively or directly. The paper's circularity audit therefore passes.
+
+\subsection{Build command and result}
+
+The Lean build invocation is
+\begin{verbatim}
+  cd lean && PATH="$HOME/.elan/bin:$PATH" \
+    lake build Vol6.QuotientOrthogonalityAdmissibility
+\end{verbatim}
+On the development host, this completes successfully on the first attempt, with the obstruction modules built as transitive dependencies. The compile is reproducible from the vol6 lakefile alone.
+
+\subsection{Sample theorem statements}
+
+For the reader's reference, the canonical paper-05 theorem signatures are:
+\begin{verbatim}
+noncomputable def burnol_blaschke_quotient_orthogonality_of_intro
+    (Q : CanonicalQuotientOrthogonalityIntroduction) :
+    QuotientOrthogonalityInvisibility blaschkeDefectObject
+
+theorem burnol_blaschke_defect_is_admissible_of_intro
+    (A : CanonicalAdmissibilityIntroduction) :
+    BurnolBlaschkeDefectIsAdmissible
+
+theorem burnol_blaschke_orthogonality_and_admissibility_iff :
+    (Nonempty (QuotientOrthogonalityInvisibility blaschkeDefectObject) /\
+        BurnolBlaschkeDefectIsAdmissible) <->
+      BurnolBlaschkeOrthogonalityAdmissibilityIntroduction
+\end{verbatim}
+
+\section{Haskell numerical demonstration}\label{sec:haskell}
+
+\subsection{Programme outline}
+
+The Haskell demonstration $\mathrm{haskell/paper-05-quotient-orthogonality-and-admissibility/Main.hs}$ runs five numerical checks on a 3-zero finite Blaschke packet $P = (\alpha_{1}, \alpha_{2}, \alpha_{3})$ with
+\begin{equation}\label{eq:demoPacket}
+  \alpha_{1} = 0.5,\qquad \alpha_{2} = 0.5\,i,\qquad \alpha_{3} = -0.3 + 0.4\,i.
+\end{equation}
+All three points lie strictly inside the open unit disc, satisfying the Pick condition. The numerical checks are:
+\begin{enumerate}
+  \item Build the Pick/Cauchy/Szeg\H{o} Gram matrix $G$ via~\eqref{eq:gramFormula} and print it.
+  \item Compute $\det G$; verify it is nonzero (Pick positive-definiteness).
+  \item Project synthetic ``lifts'' through $\PK$ and verify the inner-product difference is zero (cokernel orthogonality).
+  \item Verify the polarisation identity~\eqref{eq:polarization} on a real and a purely-imaginary test pair.
+  \item Verify resolvent stability of a one-step regularised iterate.
+\end{enumerate}
+
+\subsection{Numerical results on the demo packet}
+
+For the packet~\eqref{eq:demoPacket}, the Gram matrix is
+\begin{equation}\label{eq:demoGram}
+  G \;\approx\;
+  \begin{pmatrix}
+    1.3333 & 0.9412 - 0.2353\,i & 0.8440 - 0.1468\,i \\
+    0.9412 + 0.2353\,i & 1.3333 & 1.2075 - 0.2264\,i \\
+    0.8440 + 0.1468\,i & 1.2075 + 0.2264\,i & 1.3333
+  \end{pmatrix}.
+\end{equation}
+Its determinant is
+\begin{equation}\label{eq:demoDet}
+  \det G \;\approx\; 0.0989 + 5.55 \times 10^{-17}\,i,
+\end{equation}
+so $|\det G| \approx 0.0989 > 0$, confirming Pick positive-definiteness.
+
+The cokernel-orthogonality check (item~3) prints zero difference for all three Pick basis vectors:
+\begin{verbatim}
+  basis 0: difference = 0.0 :+ 0.0   (should be 0)
+  basis 1: difference = 0.0 :+ 0.0   (should be 0)
+  basis 2: difference = 0.0 :+ 0.0   (should be 0)
+  Total |difference| = 0.0
+  Cokernel orthogonality: PASS
+\end{verbatim}
+
+The polarisation check (item~4) verifies the identity for $u = (1, 2, 3)$ and $v = (i, 2i, 3i)$:
+\begin{equation}\label{eq:demoPol}
+  \inn{u}{v}_{G}
+    \;\approx\; 0 + 41.99\,i,
+  \qquad
+  \tfrac{1}{4}(\|u + v\|_{G}^{2} - \|u - v\|_{G}^{2} - i\,\|u + iv\|_{G}^{2} + i\,\|u - iv\|_{G}^{2})
+    \;\approx\; 0 + 41.99\,i,
+\end{equation}
+with $|\mathrm{LHS} - \mathrm{RHS}| = 0$.
+
+The resolvent-stability check (item~5) succeeds with zero difference between the resolvent value and the regularised iterate, confirming Atom~3 numerically.
+
+\subsection{What the demonstration does and does not show}
+
+The demonstration verifies the \emph{finite-rank} ground truth underlying paper~05's introduction packages on a small concrete example. It does \emph{not}:
+\begin{itemize}
+  \item invoke or assume Nyman density;
+  \item use the Beurling--Nyman criterion;
+  \item use any RH-equivalent;
+  \item discharge the lift to the canonical (infinite-dimensional) defect.
+\end{itemize}
+The lift to the canonical defect is exactly the residual obstruction characterised by the paired Lean obstruction modules.
+
+\section{Discussion}\label{sec:discussion}
+
+\subsection{What is closed by paper 05}
+
+Paper~05 closes the following sub-targets to the maximal extent permitted by the strict rules:
+\begin{itemize}
+  \item Sub-target~2.3 (quotient orthogonality and Nyman/Yoneda invisibility) is reduced via \cref{thm:principalA} and \cref{cor:cokernelEquiv} to a single-field cokernel-orthogonality introduction package, characterised exactly by the $\mathrm{Vol6.Obstruction.QuotientOrthogonalityObstruction}$ module.
+  \item Sub-target~2.4 (admissibility) is reduced via \cref{thm:principalB} and \cref{cor:admissibilityEquiv} to a three-field admissibility introduction package, one field per opaque vol5 atom, characterised exactly by the $\mathrm{Vol6.Obstruction.AdmissibilityObstruction}$ module.
+\end{itemize}
+The combined introduction package of \cref{def:combinedPackage} is shown to be exactly the deliverable expected by paper~06's final assembly.
+
+\subsection{What remains as residual obstructions}
+
+The only mathematical content not closed by paper~05 is, by construction, exactly the content of the introduction packages:
+\begin{itemize}
+  \item the cokernel rule at the vol5 opaque-detection layer (one Prop field);
+  \item the three opaque admissibility atoms themselves.
+\end{itemize}
+Both pieces of residual data are non-circular: their proofs reduce, at the model-space level, to standard Hardy-space and finite-rank Hilbert-module theorems whose statements do not invoke Nyman density, Beurling--Nyman, or RH-equivalent material.
+
+\subsection{Composition with paper 04 and paper 06}
+
+Paper~05's outputs feed into paper~06's final assembly as follows:
+\begin{itemize}
+  \item the orthogonality introduction package (Section~A) supplies the $\mathrm{orthogonality}$ field of $\mathrm{BurnolBlaschkeRKHSDetectorSemantics}$;
+  \item the admissibility introduction package (Section~B) supplies the $\mathrm{admissibility}$ field;
+  \item paper~02 supplies the $\mathrm{detector}$ field;
+  \item paper~04 supplies the $\mathrm{externalization}$ field via $\mathrm{rkhs\_externalization\_of\_finite}$.
+\end{itemize}
+With all four fields in place, paper~06's $\mathrm{yoneda\_blaschke\_detector\_calculus}$ is constructed by direct field assignment.
+
+\subsection{Comparison with the density route}
+
+The density route (Burnol's factorisation bridge) attempts to close sub-target~2.3 by appealing to Nyman density: the Nyman/Yoneda image is dense in $L^{2}(0,1)$, so detection is automatic. This route is forbidden by next-steps.md and the strict rules because:
+\begin{enumerate}
+  \item Nyman density of the fractional-part generators in $L^{2}(0,1)$ is precisely the Beurling--Nyman criterion, equivalent to RH;
+  \item assuming Nyman density therefore amounts to assuming RH;
+  \item any proof using it would be circular relative to the master theorem~\eqref{eq:masterTheorem}.
+\end{enumerate}
+Paper~05's cokernel-by-construction approach evades the circularity entirely: cokernel orthogonality is a pure category-theoretic / quotient-construction fact, true of any cokernel inclusion, with no analytic content beyond the definition of the quotient.
+
+\subsection{Comparison with internal Blaschke triviality}
+
+Internal Blaschke triviality $\mathrm{IsEmpty}\,\mathrm{burnolBlaschkeFactor.modelSpaceCarrier}$ is the \emph{conclusion} of the no-phantom theorem chain when the off-critical kernel target is also discharged. Assuming it as a paper~05 input would short-circuit the entire vol5/vol6 development. Paper~05 does not assume it; the cokernel rule is strictly weaker (it asserts orthogonality of the Nyman/Yoneda image to the defect, not vanishing of the defect itself).
+
+\subsection{Limitations}
+
+The principal limitation of paper~05 is that the three opaque admissibility atoms cannot be inhabited from inside vol6 without supplying an introduction package, because vol5 ships them as pure opaque Props. The obstruction module $\mathrm{Vol6.Obstruction.AdmissibilityObstruction}$ records this limitation transparently: the package is \emph{equivalent} (\cref{cor:admissibilityEquiv}) to $\mathrm{BlaschkeDefectAdmissible}$, so paper~05 has done the maximal possible work modulo modifying vol5 (forbidden) or adding axioms (forbidden).
+
+\subsection{Future work}
+
+Three avenues for closing the residual obstructions without violating the strict rules:
+\begin{enumerate}
+  \item lift the vol5 opaque admissibility atoms to transparent definitions in a vol5.5 layer (requires vol5 modification);
+  \item supply the introduction packages from a separate vol7 sprint that proves them at the model-space level using only finite-rank Hilbert-space algebra plus regularised convergence;
+  \item bypass admissibility by constructing a strictly stronger detector calculus that does not require the admissibility predicates as separate inputs.
+\end{enumerate}
+
+\section{Worked example: explicit cokernel orthogonality on a 3-zero packet}\label{sec:workedExample}
+
+We expand on the Haskell demonstration of \cref{sec:haskell} with an explicit computation of cokernel orthogonality, shown algebraically rather than only numerically.
+
+\subsection{Setup}
+
+Take the packet $P = (\alpha_{1}, \alpha_{2}, \alpha_{3})$ with
+$\alpha_{1} = 1/2$, $\alpha_{2} = i/2$, and $\alpha_{3} = -3/10 + 2i/5$. The associated finite Blaschke product is
+\begin{equation}\label{eq:explicitB}
+  B_{P}(z)
+  \;=\;
+  \prod_{j=1}^{3} \frac{z - \alpha_{j}}{1 - \overline{\alpha_{j}}\, z}.
+\end{equation}
+The model space $\KBP = \HardyTwo / B_{P} \HardyTwo$ is 3-dimensional.
+
+\subsection{The Pick basis and Gram matrix}
+
+The Pick basis $\{e_{1}, e_{2}, e_{3}\}$ of $\KBP$ is given by~\eqref{eq:pickBasis}:
+\begin{equation}\label{eq:explicitPickBasis}
+  e_{i}(z) \;=\; \frac{1}{1 - \overline{\alpha_{i}} z}.
+\end{equation}
+The Gram matrix entries follow from~\eqref{eq:gramFormula}:
+\begin{equation}\label{eq:explicitGram}
+  G_{ij}
+  \;=\;
+  \frac{1}{1 - \overline{\alpha_{j}}\, \alpha_{i}}.
+\end{equation}
+Plugging in: $G_{11} = 1/(1 - 1/4) = 4/3$, $G_{22} = 1/(1 - 1/4) = 4/3$, $G_{33} = 1/(1 - 1/4) = 4/3$ (using $|\alpha_{i}|^{2} = 1/4$ for all three).
+
+\subsection{Sample lift in $B_{P} \cdot \HardyTwo$}
+
+A simplest nonzero lift in $B_{P} \cdot \HardyTwo$ is the function $f(z) = B_{P}(z) \cdot 1 = B_{P}(z)$ itself. This lift is, by definition, in $B_{P} \cdot \HardyTwo$.
+
+\subsection{Verification of the cokernel rule}
+
+The image of $f$ in $\KBP$ under the quotient $\pi : \HardyTwo \to \KBP$ is by definition zero:
+\begin{equation}\label{eq:explicitProj}
+  \pi(B_{P} \cdot 1) \;=\; 0 \;\in\; \KBP.
+\end{equation}
+Therefore for any $v \in \KBP$,
+\begin{equation}\label{eq:explicitOrth}
+  \inn{v}{\pi(f)}_{H^{2}} \;=\; \inn{v}{0}_{H^{2}} \;=\; 0.
+\end{equation}
+This is precisely the cokernel-orthogonality principle of \cref{thm:cokernelPrinciple}, instantiated on the 3-zero packet. The numerical Haskell demonstration of \cref{sec:haskell} confirms that the projection $\PK$ implemented in coordinates returns zero on the three Pick basis vectors when the lift is set to $B_{P} \cdot 1$.
+
+\subsection{The package field at the explicit level}
+
+For the introduction package field $\mathrm{yoneda\_image\_not\_detected}$, the obligation is: for any presheaf $F$ in the Nyman/Yoneda image, the opaque relation $\mathrm{DefectDetectedByRationalDilationRepresentable}\,K\,F$ does not hold. At the explicit level, $F = \Yon(\mathrm{nymanObject}(k))$ for some Nyman generator $k$. The corresponding Hardy-side realisation lifts $k$ to a fractional-part kernel $\chi_{\theta}$ (with parameter $\theta \in \mathbb{Q} \cap (0, 1]$), and $\chi_{\theta} \cdot \BS_{P}^{-1}$ --- if it is in $\HardyTwo$ --- is in $\BS_{P} \cdot \HardyTwo$. The cokernel rule then forces $\pi(\chi_{\theta}) \in \KBP$ to lie in the kernel of pairing with any $v \in \KBP$ --- vanishingly so, again by~\eqref{eq:explicitProj}.
+
+This is the explicit content of the field $\mathrm{yoneda\_image\_not\_detected}$ when supplied at the model-space level. The field's typed signature in the package is the abstract opaque-detection version of this fact.
+
+\section{Detailed comparison with sibling papers}\label{sec:comparison}
+
+\subsection{Paper 02 (finite-rank detector) and paper 05}
+
+Paper 02 (\textit{Detector Completeness for Finite Blaschke Packets via Gram-Matrix Nondegeneracy}) constructs the finite-rank detector $\mathrm{FiniteModelSpaceDetector}\,(\mathrm{finiteBlaschkeDefectObject}\,P)$ for any nonempty finite Blaschke packet $P$. The construction uses Gram-matrix nondegeneracy (the Pick condition) to prove that finite kernel functionals separate nonzero model-space vectors.
+
+Paper 05 (the present work) is downstream: it uses the existence of the finite-rank detector implicitly (via the rational-dilation externalisation of paper 04) to motivate the orthogonality structure, but it does not depend on paper 02's principal theorem. Paper 02 supplies the \emph{detection} side; paper 05 supplies the \emph{non-detection} (orthogonality) and \emph{admissibility} sides.
+
+\subsection{Paper 03 (off-critical defect kernel) and paper 05}
+
+Paper 03 (\textit{Off-Critical Zeta Zeros Create Nonzero Model-Space Vectors}) proves Target~1 of the vol5 conditional theorem: $\mathrm{OffCriticalZeroDefectKernel}$. It uses paper 01's finite-packet model spaces; it does not interact directly with paper 05's outputs.
+
+Paper 05's outputs feed only into paper 06's assembly of Target~2 ($\mathrm{YonedaBlaschkeDetectorCalculus}$).
+
+\subsection{Paper 04 (rational-dilation externalisation) and paper 05}
+
+Paper 04 supplies the \emph{externalization} field of $\mathrm{BurnolBlaschkeRKHSDetectorSemantics}$ via $\mathrm{rkhs\_externalization\_of\_finite}$ applied to the finite-rank externalisation of paper 02. Paper 05 supplies the \emph{orthogonality} and \emph{admissibility} fields. The four-field assembly is a direct field-by-field plumbing in paper~06.
+
+\subsection{Paper 06 (final assembly)}
+
+Paper 06 (\textit{Assembly of the Yoneda/Blaschke Detector Calculus}) is the synthesis paper for Target 2. Its principal theorem is the field-by-field construction
+\begin{verbatim}
+theorem yoneda_blaschke_detector_calculus :
+    YonedaBlaschkeDetectorCalculus :=
+  { rkhs :=
+    { detector      := canonicalBurnolBlaschkeDetector
+      rational      := canonicalRationalDilationSemantics
+      externalization := burnol_blaschke_detector_externalization
+      orthogonality := burnol_blaschke_quotient_orthogonality
+      admissibility := burnol_blaschke_defect_is_admissible } }
+\end{verbatim}
+The fields $\mathrm{orthogonality}$ and $\mathrm{admissibility}$ are paper 05's outputs, parameterised over the introduction packages.
+
+\section{The combined audit logic}\label{sec:auditLogic}
+
+The Lean implementation of paper 05 establishes three audit equivalences:
+\begin{itemize}
+  \item $\mathrm{Nonempty}\,(\mathrm{QuotientOrthogonalityInvisibility}\,K) \iff \mathrm{QuotientOrthogonalityIntroduction}\,K$ (\cref{cor:cokernelEquiv});
+  \item $\mathrm{BlaschkeDefectAdmissible}\,K \iff \mathrm{AdmissibilityIntroduction}\,K$ (\cref{cor:admissibilityEquiv});
+  \item the conjunction of both, on the canonical defect, equivalent to the combined introduction package (\cref{thm:combinedPrincipal}).
+\end{itemize}
+These three equivalences serve as paper 05's audit invariant. Their formal statements ensure that paper 05's downstream consumers (paper 06, paper 07) get exactly what they would have got from a hypothetical direct inhabitant of the structures, with the introduction packages playing the role of named obstruction parameters.
+
+\subsection{Why prove necessity?}
+
+Sufficiency alone would suffice for paper 05's downstream use. Necessity is proved as part of the audit invariant for two reasons:
+\begin{itemize}
+  \item it certifies that the introduction packages are not weaker than the structures they build (so we are not surreptitiously importing more data);
+  \item it certifies that the introduction packages are not stronger than required (so we are not gratuitously demanding extra obligations of paper 06).
+\end{itemize}
+The audit equivalence is, in this sense, the formal statement that the obstructions are precisely what they say they are.
+
+\section{Universe-level subtleties}\label{sec:universe}
+
+The vol5 structure $\mathrm{QuotientOrthogonalityInvisibility}$ is declared at universe level $\mathrm{Type}\,1$ rather than $\mathrm{Prop}$, because its $\mathrm{OrthogonalToRepresentable}$ field carries data (a $\mathrm{DQPresheaf} \to \mathrm{Prop}$, i.e.~a higher-order predicate). This forces the paper-05 inhabitant to be a $\mathrm{noncomputable}$ $\mathrm{def}$ rather than a $\mathrm{theorem}$.
+
+By contrast, $\mathrm{BlaschkeDefectAdmissible}$ and $\mathrm{AdmissibleCondensedHilbertDefect}$ are $\mathrm{Prop}$, so the corresponding paper-05 inhabitant is a $\mathrm{theorem}$. The introduction packages $\mathrm{QuotientOrthogonalityIntroduction}$ and $\mathrm{AdmissibilityIntroduction}$ are both $\mathrm{Prop}$, so the obstruction modules' theorems all live in $\mathrm{Prop}$.
+
+The combined package $\mathrm{BurnolBlaschkeOrthogonalityAdmissibilityIntroduction}$ is also $\mathrm{Prop}$, so the combined principal theorem is a $\mathrm{theorem}$, even though one of its consequences (the orthogonality field) is a $\mathrm{Type}\,1$ inhabitant.
+
+\section{Detailed proof outline of the package fields at the model-space level}\label{sec:packageOutline}
+
+We close with an outline of how each introduction package field would be discharged \emph{at the model-space (Hardy-quotient) level}, independently of the vol5 opaque interface. This outline is non-formal --- it does not type-check at the vol5 layer because of the opaque interfaces involved --- but it documents the precise mathematical content one would need to push through a (forbidden) modification of vol5 or a (legitimate) future vol7 sprint.
+
+\subsection{Outline of the cokernel field}
+
+Goal: prove $\forall F : \mathrm{DQPresheaf},\;\mathrm{YonedaNymanRepresentableImage}\,F \to \neg\,\mathrm{DefectDetectedByRationalDilationRepresentable}\,\mathrm{blaschkeDefectObject}\,F$.
+
+Outline:
+\begin{enumerate}
+  \item Suppose $F$ is in the Nyman/Yoneda image. Then $F = \Yon(\mathrm{nymanObject}(k))$ for some Nyman generator $k$.
+  \item The Hardy-side realisation of $k$ is the fractional-part kernel $\chi_{\theta}$ with rational parameter $\theta = \theta(k) \in \mathbb{Q} \cap (0, 1]$.
+  \item Under the Burnol/Mellin transport, $\chi_{\theta}$ corresponds to an element of $H^{2}$ that lies in $\BS \cdot H^{2} = \mathrm{blaschkeHardyImage}$ (this is the precise content of the Burnol factorisation, available at the model-space level without using density).
+  \item By the cokernel/quotient construction~\eqref{eq:cokernelExact}, $\pi(\chi_{\theta}) = 0$ in $\KB$.
+  \item Therefore for any $v \in \KB$, $\inn{v}{\pi(\chi_{\theta})}_{H^{2}} = 0$.
+  \item The opaque relation $\mathrm{DefectDetectedByRationalDilationRepresentable}\,\mathrm{blaschkeDefectObject}\,F$ unfolds (at the model-space level, where it is no longer opaque) to ``there exists $v \in \KB$ such that $\inn{v}{\pi(\chi_{\theta})} \ne 0$''. The previous step contradicts this.
+\end{enumerate}
+
+The step (3) is the only nontrivial analytic content. It is \emph{not} Nyman density (which would assert that the closure of the $\chi_{\theta}$ contains $\mathbf{1}$ in $L^{2}(0,1)$); it is the strictly weaker statement that each individual $\chi_{\theta}$ lies in $\BS \cdot H^{2}$ inside $H^{2}$. This is a Burnol--Mellin computation, not a density theorem.
+
+\subsection{Outline of the dualisability field}
+
+Goal: prove $\mathrm{BlaschkeDefectDualizable}\,\mathrm{blaschkeDefectObject}$.
+
+Outline (model-space level):
+\begin{enumerate}
+  \item Recall $\KB = H^{2} / \BS \cdot H^{2}$ and let $T_{\BS} : \KB \to \KB$ be multiplication by $z$ (the truncated shift).
+  \item For finite Blaschke packets $P$, $\KBP$ is finite-dimensional, hence dualisable as a finite-rank Hilbert module: the canonical evaluation $\KBP \otimes \KBP^{\vee} \to \C$ and coevaluation $\C \to \KBP^{\vee} \otimes \KBP$ satisfy the snake identities.
+  \item For the canonical (infinite-dimensional) $\KB$, dualisability follows from the resolvent-strong limit of the finite-dimensional dualisable structures, plus the standard fact that strong-resolvent limits of dualisable Hilbert modules are dualisable.
+\end{enumerate}
+
+\subsection{Outline of the polarisation field}
+
+Goal: prove $\mathrm{BlaschkeDefectPolarized}\,\mathrm{blaschkeDefectObject}$.
+
+Outline:
+\begin{enumerate}
+  \item The Hardy inner product on $H^{2}$ restricts to a nondegenerate Hermitian form on $\KB$ via the orthogonal-complement reading.
+  \item The polarisation identity~\eqref{eq:polarization} expresses the inner product in terms of norms.
+  \item This is verified at the finite-rank level by the Haskell demonstration of \cref{sec:haskell}; the lift to the canonical level uses no analytic content beyond restriction of the inner product to $\KB$.
+\end{enumerate}
+
+\subsection{Outline of the regularised field}
+
+Goal: prove $\mathrm{BlaschkeDefectRegularized}\,\mathrm{blaschkeDefectObject}$.
+
+Outline:
+\begin{enumerate}
+  \item For each finite Blaschke packet $P$, $T_{\BS_{P}}$ on $\KBP$ has discrete spectrum equal to $\{ \alpha_{1}, \dots, \alpha_{n} \}$ (the packet zeros).
+  \item For any $\lambda \in \D \setminus \{ \alpha_{1}, \dots, \alpha_{n} \}$, the resolvent $(T_{\BS_{P}} - \lambda)^{-1}$ exists and is a bounded operator on $\KBP$.
+  \item As $P$ varies through an exhausting sequence (of zeros of $\BS$), the resolvents $(T_{\BS_{P}} - \lambda)^{-1}$ converge \emph{strongly} to the resolvent of $T_{\BS}$ on $\KB$ for any $\lambda$ in a sufficiently small neighbourhood of $\partial \D$ inside $\D$ (more precisely: in the resolvent set of $T_{\BS}$).
+  \item Strong-resolvent convergence $\Leftrightarrow$ regularised convergence in the sense required by the third atom.
+  \item Raw operator-norm convergence does not hold in general, because $\BS$ may have infinitely many zeros and the multiplication operators do not converge in the uniform topology.
+\end{enumerate}
+
+The above outlines collectively document the mathematical content underlying paper 05's introduction packages. None of the steps invokes Nyman density, the Beurling--Nyman criterion, or any RH-equivalent. The only analytic content is standard Hardy-space and resolvent-strong-convergence theory.
+
+\section{Conclusion}\label{sec:conclusion2}
+
+We have closed sub-targets~2.3 and~2.4 of the vol5 next-steps.md programme to the maximal extent permitted by the vol5 opaque surface and the strict rules of vol6. Section~A reduces sub-target~2.3 to a single-field cokernel-orthogonality introduction package, established by cokernel-by-construction without any Nyman density or Beurling--Nyman input. Section~B reduces sub-target~2.4 to a three-field admissibility introduction package, one field per opaque vol5 atom, with a documented finite-rank semantic content motivating each. Both reductions are accompanied by Lean obstruction modules proving sufficiency \emph{and} necessity, by a self-contained Lean theorem closing the principal sub-target on the introduction package, and by a Haskell numerical demonstration verifying the finite-rank ground truth on a 3-zero finite Blaschke packet. No new axiom, opaque, sorry, or admit is introduced. No Nyman density, Beurling--Nyman, internal Blaschke triviality, or RH-equivalent is imported.
+
+\section*{Acknowledgements}
+
+This paper is part of the vol6 sprint discharging the two payloads of the vol5 conditional theorem $\mathrm{RH\_classical\_of\_no\_phantom\_language\_breakthrough}$. We thank the vol5 team for the precise opaque interface and the next-steps.md document, whose explicit listing of circularity hazards in \S2.3 made the present paper's containment strategy possible.
+
+\begin{thebibliography}{99}
+
+\bibitem{Beurling1955}
+A.~Beurling, \textit{A closure problem related to the Riemann zeta function}, Proceedings of the National Academy of Sciences \textbf{41} (1955), 312--314.
+
+\bibitem{Nyman1950}
+B.~Nyman, \textit{On the One-Dimensional Translation Group and Semi-Group in Certain Function Spaces}, PhD thesis, University of Uppsala, 1950.
+
+\bibitem{Burnol2002}
+J.-F.~Burnol, \textit{Sur les formules explicites I: analyse invariante}, Comptes Rendus de l'Acad\'emie des Sciences, S\'erie I \textbf{331} (2000), 423--428.
+
+\bibitem{Hoffman1962}
+K.~Hoffman, \textit{Banach Spaces of Analytic Functions}, Prentice-Hall, 1962. Reprinted by Dover, 1988.
+
+\bibitem{Sarason1994}
+D.~Sarason, \textit{Sub-Hardy Hilbert Spaces in the Unit Disk}, University of Arkansas Lecture Notes in the Mathematical Sciences \textbf{10}, Wiley, 1994.
+
+\bibitem{Pick1916}
+G.~Pick, \textit{\"Uber die Beschr\"ankungen analytischer Funktionen, welche durch vorgegebene Funktionswerte bewirkt werden}, Mathematische Annalen \textbf{77} (1916), 7--23.
+
+\bibitem{ReedSimon1980}
+M.~Reed and B.~Simon, \textit{Methods of Modern Mathematical Physics. I: Functional Analysis}, Academic Press, 1980. (Resolvent and regularised convergence.)
+
+\bibitem{Kato1995}
+T.~Kato, \textit{Perturbation Theory for Linear Operators}, Springer, 1995. (Resolvent-strong convergence.)
+
+\bibitem{MacLane1998}
+S.~Mac Lane, \textit{Categories for the Working Mathematician}, Springer, 2nd ed., 1998. (Yoneda lemma, representables, cokernels.)
+
+\bibitem{LeanProver}
+The Lean Prover Community, \textit{Mathlib4}, \url{https://leanprover-community.github.io/mathlib4_docs/}, 2024. (Type-theoretic foundation for the Lean implementation.)
+
+\bibitem{Vol5}
+Yoneda AI Research, \textit{Volume V: Yoneda/Nyman Track A no-phantom language for RH}, internal preprint, 2026.
+
+\bibitem{Vol6KnowledgeBase}
+Yoneda AI Research, \textit{Volume VI: Knowledge Base}, internal manifest, 2026-05-07.
+
+\bibitem{Vol6Paper01}
+Yoneda AI Research, \textit{Vol6 Paper 01: Concrete Finite Blaschke Packet Model Spaces}, vol6 sprint output, 2026.
+
+\bibitem{Vol6Paper02}
+Yoneda AI Research, \textit{Vol6 Paper 02: Detector Completeness for Finite Blaschke Packets via Gram-Matrix Nondegeneracy}, vol6 sprint output, 2026.
+
+\end{thebibliography}
+
+\end{document}

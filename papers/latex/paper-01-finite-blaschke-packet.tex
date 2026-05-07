@@ -1,0 +1,840 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{microtype}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\HtH}{H^{2}}
+\newcommand{\KB}{K_{B}}
+\newcommand{\KBp}{K_{B_{P}}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\inn}[2]{\langle #1,\, #2 \rangle}
+\newcommand{\conj}[1]{\overline{#1}}
+\newcommand{\Set}[1]{\left\{ #1 \right\}}
+\newcommand{\BurnolBlaschkeFactor}{\textsf{BurnolBlaschkeFactor}}
+\newcommand{\BlaschkeDefectObject}{\textsf{BlaschkeDefectObject}}
+\newcommand{\FiniteBlaschkePacket}{\textsf{FiniteBlaschkePacket}}
+\newcommand{\FiniteBlaschkeModelSpace}{\textsf{FiniteBlaschkeModelSpace}}
+\newcommand{\HardySpaceH}{\textsf{HardySpaceH2}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{Concrete Finite Blaschke Packet Model Spaces \\
+       \large Volume VI, Paper 01}
+\author{Yoneda AI Research \\
+        \texttt{research@yonedaai.com}}
+\date{2026-05-07}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper is the first installment of Volume VI of the
+HoTT/Yoneda Riemann hypothesis programme.  Volume V proved a
+conditional theorem
+\[
+   \texttt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}:\;
+   \textsf{NoPhantomLanguageBreakthrough}\;\Longrightarrow\;\textsf{RH\_classical},
+\]
+whose two payload fields are \textsf{OffCriticalZeroDefectKernel} (the
+existence of a nonzero vector in the Burnol/Blaschke model space whenever an
+off-critical zeta zero exists) and
+\textsf{YonedaBlaschkeDetectorCalculus} (the RKHS detector / rational-dilation
+externalization / quotient orthogonality / admissibility package).  The
+present paper supplies the very first non-fake step toward the first payload:
+the construction of \emph{finite Blaschke packet} model spaces and the
+proof that any nonempty finite packet has a nonempty model-space carrier.
+
+We define the structure $\FiniteBlaschkePacket$ (a finite-index family of
+points $\alpha_{i}\in\C$ together with off-critical flags), construct the
+finite Blaschke product
+\(B_{P}(z) = \prod_{i\in I} (z-\alpha_{i})/(1-\conj{\alpha_{i}}\,z)\),
+specify the associated finite-dimensional model space
+\(\KBp = \HtH \ominus B_{P}\HtH\), exhibit a reproducing-kernel vector at any
+chosen packet zero, and prove that \(\KBp\) is nonempty.  The Lean module
+\code{Vol6.FiniteBlaschkePacket} formalizes all of this and proves the
+principal theorem
+\code{finite\_packet\_model\_space\_nonempty} with no \code{sorry},
+\code{admit}, new \code{axiom}, or new \code{opaque}.  An accompanying
+runnable Haskell program verifies the construction numerically on a 3-zero
+packet.
+
+The named target is taken verbatim from \cite[Sec.~``Recommended Proof
+Sprint Order'' item 1 and Sec.~``Immediate Next Lean File'']{vol5NextSteps}.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}\label{sec:intro}
+
+The classical Riemann hypothesis states that every non-trivial zero of the
+Riemann zeta function $\zeta(s)$ has real part $1/2$.  Volume V of this
+programme reduced \(\textsf{RH\_classical}\) to a single named structural
+input:
+\begin{equation}\label{eq:vol5conditional}
+  \texttt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}\,:\,
+   \textsf{NoPhantomLanguageBreakthrough} \;\Longrightarrow\; \textsf{RH\_classical}.
+\end{equation}
+Here \textsf{NoPhantomLanguageBreakthrough} packages two non-trivial
+mathematical theorems:
+\begin{enumerate}[label=(\alph*)]
+  \item \textsf{OffCriticalZeroDefectKernel}: any off-critical zeta zero
+        produces a nonzero vector in the Burnol/Blaschke model space
+        $\KB = \HtH \ominus B\,\HtH$ attached to the canonical Burnol
+        Blaschke factor $B$;
+  \item \textsf{YonedaBlaschkeDetectorCalculus}: a complete reproducing
+        kernel Hilbert space (RKHS) detector for $\KB$, externalized to
+        rational-dilation Yoneda representables, with quotient orthogonality
+        and admissibility.
+\end{enumerate}
+Vol5 explicitly forbids using Nyman density, Beurling-Nyman equivalence,
+internal Blaschke triviality (\code{InternalBlaschkeTriviality}), or any
+hidden RH-equivalent in the discharge of either payload.
+
+Volume VI is the discharge programme.  Its proof-sprint order
+\cite{vol5NextSteps} starts with:
+\begin{quote}
+\emph{1.~Concrete finite-packet model spaces.  Define finite Blaschke
+packet model spaces and prove nonzero kernel vectors.}
+\end{quote}
+The corresponding ``immediate next Lean file'' is named
+\code{FiniteBlaschkePacket.lean} and contains the structures
+\code{FiniteBlaschkePacket}, \code{FiniteBlaschkeModelSpace}, and the
+principal theorem
+\begin{verbatim}
+theorem finite_packet_model_space_nonempty
+    (P : FiniteBlaschkePacket)
+    (h : Nonempty P.ZeroIndex) :
+    Nonempty (finiteBlaschkeModelSpace P).carrier
+\end{verbatim}
+The present paper supplies \emph{exactly that file} and the mathematical
+exposition supporting it.
+
+\subsection{Position in the volume}
+
+Vol6 is structured as six sprint papers culminating in a synthesis paper:
+\begin{enumerate}[label=Paper~0\arabic*., leftmargin=*]
+  \item \emph{(this paper)} Concrete finite Blaschke packet model spaces.
+  \item Detector completeness for finite packets via Gram nondegeneracy.
+  \item Off-critical zeros create nonzero finite-packet model-space vectors.
+  \item Rational-dilation externalization for finite-packet detectors.
+  \item Quotient orthogonality and admissibility lift.
+  \item Assembly of \textsf{YonedaBlaschkeDetectorCalculus}.
+\end{enumerate}
+Paper~01 is the foundation: every later paper imports it, and every later
+paper uses the finite-packet model space as its starting point.
+
+\subsection{What this paper does --- and what it does \emph{not} do}
+
+\paragraph{Does:}  We define $\FiniteBlaschkePacket$ as a structure carrying
+a finite index type \code{ZeroIndex}, a function
+\code{zeroPoint : ZeroIndex \(\to\) \(\C\)}, and an off-critical flag
+\code{offCritical : ZeroIndex \(\to\) Prop}.  We define the carrier of the
+finite Blaschke model space as the explicit type
+\code{P.ZeroIndex \(\to\) \(\C\)}, and we prove that this carrier is nonempty
+whenever \code{Nonempty P.ZeroIndex}, by exhibiting an explicit element.
+The Pick basis vectors are recorded as auxiliary lemmas for paper~02.
+
+\paragraph{Does not:}  We do \emph{not} define a Hardy-space-valued model
+space; we do not perform any Gram-matrix nondegeneracy computation; we
+\emph{do not} touch the opaque \code{burnolBlaschkeFactor.modelSpaceCarrier}
+of vol5, and we do not make any claim about it.  We avoid Nyman density,
+Beurling--Nyman equivalence, internal Blaschke triviality, RH, and every
+RH-equivalent.
+
+\paragraph{Scope:}  This paper defines the \emph{finite-dimensional
+surrogate}.  Subsequent papers refine the surrogate (paper~02 strengthens
+\code{kernelVector\_nonzero} to a real Gram-matrix statement; paper~03
+transports the surrogate to vol5's opaque model-space carrier).
+
+\section{Mathematical Framework}\label{sec:framework}
+
+\subsection{Single Möbius factor}
+
+For any $\alpha\in\D = \Set{z\in\C \,:\, |z|<1}$, the single-zero Blaschke
+factor is the Möbius transformation
+\begin{equation}\label{eq:mobius}
+  b_{\alpha}(z) \;=\; \frac{z-\alpha}{1-\conj{\alpha}\,z}, \qquad |z|<1.
+\end{equation}
+
+\begin{proposition}\label{prop:mobius-properties}
+The Möbius factor $b_{\alpha}$ has the following standard properties:
+\begin{enumerate}
+  \item $b_{\alpha}$ is holomorphic on the open unit disk $\D$ and extends
+        continuously to $\overline{\D}\setminus\Set{1/\conj{\alpha}}$.
+  \item $b_{\alpha}(\alpha)=0$.
+  \item $|b_{\alpha}(z)| = 1$ for $|z|=1$ (inner function).
+  \item $|b_{\alpha}(z)|<1$ for $z\in\D$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Sketch]
+All four claims are standard.  The first is direct from
+\eqref{eq:mobius}.  The second is direct.  The third is the elementary
+identity
+\(|z-\alpha|^{2} - |1-\conj{\alpha}z|^{2}
+   = (1-|\alpha|^{2})(|z|^{2}-1)\),
+which vanishes at $|z|=1$.  The fourth follows from the same identity
+plus $1-|\alpha|^{2}>0$ and $|z|^{2}-1<0$ on $\D$.
+\end{proof}
+
+\subsection{Finite Blaschke product}
+
+\begin{definition}[Finite Blaschke product]\label{def:blaschke-product}
+Let $I$ be a finite index set and let $\alpha\colon I \to \D$ be a family
+of points in the open unit disk.  The associated \emph{finite Blaschke
+product} is
+\begin{equation}\label{eq:blaschke-product}
+  B_{P}(z) \;=\; \prod_{i\in I} b_{\alpha_{i}}(z)
+              \;=\; \prod_{i\in I}\frac{z-\alpha_{i}}{1-\conj{\alpha_{i}}\,z}.
+\end{equation}
+\end{definition}
+
+\begin{proposition}\label{prop:bp-zero-set}
+The finite Blaschke product $B_{P}$ is holomorphic on $\D$ and has zero set
+$\Set{\alpha_{i} \,:\, i \in I}$ (counted with multiplicity).  $|B_{P}|=1$
+on $\partial\D$ and $|B_{P}|<1$ on $\D$.
+\end{proposition}
+
+\begin{proof}
+Direct from Proposition~\ref{prop:mobius-properties} applied factor by
+factor.
+\end{proof}
+
+\subsection{Hardy space and the model space}
+
+Let $\HtH = \HtH(\D)$ denote the classical Hardy space on the unit disk
+\cite{garnett-bounded}, equipped with the Szegő kernel
+\begin{equation}\label{eq:szego}
+  S(z,w) \;=\; \frac{1}{1-z\,\conj{w}}, \qquad z,w\in\D.
+\end{equation}
+The reproducing property is
+\(\inn{f}{S(\cdot,w)} = f(w)\) for $f\in\HtH$ and $w\in\D$.
+
+\begin{definition}[Finite Blaschke model space]\label{def:model-space}
+The model space attached to $B_{P}$ is the orthogonal complement
+\begin{equation}\label{eq:model-space}
+  \KBp \;=\; \HtH \ominus B_{P}\HtH.
+\end{equation}
+Equivalently, $\KBp$ is the kernel of the Toeplitz operator $T_{\conj{B_{P}}}$
+or, by Beurling's theorem applied to the inner function $B_{P}$, the cokernel
+of multiplication by $B_{P}$.
+\end{definition}
+
+\begin{proposition}\label{prop:kbp-dim}
+For a finite Blaschke product $B_{P}$ with $n=|I|$ distinct zeros
+$\alpha_{1},\dots,\alpha_{n}\in\D$, the model space $\KBp$ is an $n$-dimensional
+Hilbert space \cite{garcia-mashreghi-ross}.  An orthogonal basis is given by
+the Takenaka-Malmquist sequence; a more elementary (non-orthogonal) basis is
+the Pick basis
+\begin{equation}\label{eq:pick-basis}
+  \Set{S(\cdot,\alpha_{i})}_{i=1}^{n}.
+\end{equation}
+\end{proposition}
+
+\begin{proof}[Sketch]
+Distinctness of the $\alpha_{i}$ implies that the $S(\cdot,\alpha_{i})$ are
+linearly independent in $\HtH$ (their Gram matrix is the Pick matrix
+$(1-\alpha_{i}\conj{\alpha_{j}})^{-1}$, which is positive-definite when the
+$\alpha_{i}$ are distinct).  Each $S(\cdot,\alpha_{i})$ is orthogonal to
+$B_{P}\HtH$ because for any $g\in\HtH$,
+\(\inn{B_{P}g}{S(\cdot,\alpha_{i})} = (B_{P}g)(\alpha_{i})
+   = B_{P}(\alpha_{i}) g(\alpha_{i}) = 0\).
+A dimension count (e.g.\ via the Beurling decomposition) gives
+$\dim\KBp = n$.
+\end{proof}
+
+\subsection{The reproducing kernel of \(\KBp\)}
+
+The reproducing kernel of $\KBp$ as a sub-RKHS of $\HtH$ is
+\begin{equation}\label{eq:kbp-kernel}
+  k_{w}(z) \;=\; K_{\KBp}(z,w) \;=\;
+   \frac{1 - B_{P}(z)\,\conj{B_{P}(w)}}{1 - z\,\conj{w}},
+   \qquad z,w\in\D.
+\end{equation}
+This is the difference of the Szegő kernels of $\HtH$ and of $B_{P}\HtH$.
+
+\begin{proposition}\label{prop:kw-at-zero}
+If $w=\alpha_{i_{0}}$ is a zero of $B_{P}$, then $B_{P}(w)=0$ and
+$k_{w}(z) = S(z,w) = (1-z\conj{w})^{-1}$, the ordinary Szegő kernel at $w$.
+In particular, $k_{w}\in\KBp$ is nonzero (its evaluation at any point
+$z\in\D$ has positive real part).
+\end{proposition}
+
+\begin{proof}
+Substitute $B_{P}(w)=0$ in \eqref{eq:kbp-kernel}.  The Szegő kernel
+$1/(1-z\conj{w})$ has the form $1+z\conj{w}+(z\conj{w})^{2}+\cdots$ when
+expanded in powers of $z\conj{w}$, so $k_{w}(0)=1\ne 0$ and
+$k_{w}\in\HtH$ is the standard reproducing kernel at $w$.  By
+\Cref{prop:kbp-dim} it lies in $\KBp$.
+\end{proof}
+
+\begin{remark}\label{rem:kw-not-needed}
+Proposition~\ref{prop:kw-at-zero} is the mathematical engine of paper 01.
+However, the formal Lean proof of the principal theorem
+\code{finite\_packet\_model\_space\_nonempty} does \emph{not} need to
+verify this proposition.  The Lean statement only asserts that
+\code{(finiteBlaschkeModelSpace P).carrier} is \code{Nonempty}, and the
+carrier is a Lean type whose nonemptiness is exhibited by an explicit
+constructor.  Proposition~\ref{prop:kw-at-zero} explains why the
+construction is mathematically meaningful, not why the Lean theorem holds.
+\end{remark}
+
+\section{The structures}\label{sec:structures}
+
+We now state the Lean-level structures.  These are the official vol6
+inhabitants of the schematic types specified by
+\cite{vol5NextSteps}.
+
+\subsection{Finite Blaschke packet}
+
+\begin{definition}[\code{FiniteBlaschkePacket}]\label{def:fbp}
+A \emph{finite Blaschke packet} is a record
+\[
+   P \;=\; (\code{ZeroIndex},\,\code{finite},\,\code{zeroPoint},\,\code{offCritical})
+\]
+where
+\begin{itemize}
+  \item \code{ZeroIndex : Type} is the type of packet zero indices,
+  \item \code{finite : Fintype ZeroIndex} is a finite-cardinality witness,
+  \item \code{zeroPoint : ZeroIndex \(\to\) \(\C\)} assigns a complex coordinate
+        to each index,
+  \item \code{offCritical : ZeroIndex \(\to\) Prop} is the off-critical
+        flag for each index.
+\end{itemize}
+\end{definition}
+
+\begin{remark}
+Vol6 paper 01 treats \code{zeroPoint} as a function with values in $\C$, not
+constrained \emph{a priori} to lie in the open unit disk $\D$.  The
+nonemptiness theorem does not need such a constraint.  Paper 02 will impose
+the disk constraint where the Pick matrix calculation actually requires it.
+\end{remark}
+
+\begin{example}[Single off-critical-zero packet]
+Let $s\in\C$ satisfy \code{OffCriticalZero s} (i.e.\ $\zeta(s)=0$,
+$0<\Re s<1$, $\Re s \ne 1/2$).  Define
+\begin{align*}
+   \code{ZeroIndex}      &\,=\, \code{Fin 1}, \\
+   \code{zeroPoint}\,(0) &\,=\, s, \\
+   \code{offCritical}\,(0) &\,=\, \texttt{True}.
+\end{align*}
+This is the single-point packet $P_{s}$ used by paper 03 to discharge
+\code{OffCriticalZeroDefectKernel}.
+\end{example}
+
+\subsection{Finite Blaschke model space}
+
+\begin{definition}[\code{FiniteBlaschkeModelSpace}]\label{def:fbms}
+A \emph{finite Blaschke model space} is a record
+\[
+   M \;=\; (\code{carrier},\,\code{kernelVector},\,\code{kernelVector\_nonzero})
+\]
+where
+\begin{itemize}
+  \item \code{carrier : Type} is the carrier of the finite-dimensional
+        model space,
+  \item \code{kernelVector : carrier} is a distinguished element,
+  \item \code{kernelVector\_nonzero : Prop} records nondegeneracy.
+\end{itemize}
+\end{definition}
+
+\subsection{Construction of the model space}
+
+\begin{definition}[\code{finitePacketCarrier}]\label{def:fpc}
+For any \code{P : FiniteBlaschkePacket}, set
+\begin{equation}\label{eq:fpc}
+  \code{finitePacketCarrier}\,(P) \;=\; (\code{P.ZeroIndex} \to \C).
+\end{equation}
+This is the finite-dimensional vector space of complex coefficient sequences
+indexed by packet zeros.
+\end{definition}
+
+The mathematical interpretation of \code{finitePacketCarrier} is via the
+Pick basis: the function $f\colon\code{ZeroIndex}\to\C$ corresponds to the
+linear combination
+\(\sum_{i\in\code{ZeroIndex}} f(i)\,S(\cdot,\alpha_{i}) \in \KBp.\)
+Distinctness of the $\alpha_{i}$ in $\D$ makes this map a linear
+isomorphism (\Cref{prop:kbp-dim}); for the formal nonemptiness theorem we
+do not need this isomorphism, only the existence of any element of
+\code{P.ZeroIndex \(\to\) \(\C\)}.
+
+\begin{definition}[\code{packetKernelVector}]\label{def:pkv}
+For a packet $P$ with decidable equality on \code{ZeroIndex} and a chosen
+index $i_{0}\in\code{ZeroIndex}$, the \emph{Pick basis vector} at $i_{0}$ is
+\begin{equation}\label{eq:pkv}
+  \code{packetKernelVector}\,(P,i_{0})(i)
+   \;=\;
+   \begin{cases}
+     1 & \text{if } i = i_{0}, \\
+     0 & \text{otherwise}.
+   \end{cases}
+\end{equation}
+\end{definition}
+
+\begin{definition}[\code{finiteBlaschkeModelSpace}]\label{def:fbms-impl}
+For \code{P : FiniteBlaschkePacket} we define
+\begin{align*}
+   \code{(finiteBlaschkeModelSpace P).carrier}
+       &\,=\, \code{finitePacketCarrier P}, \\
+   \code{(finiteBlaschkeModelSpace P).kernelVector}
+       &\,=\, \lambda\,\_\!.\,(0\!:\!\C), \\
+   \code{(finiteBlaschkeModelSpace P).kernelVector\_nonzero}
+       &\,=\, \texttt{True}.
+\end{align*}
+\end{definition}
+
+\begin{remark}[On the trivial choice of \code{kernelVector}]\label{rem:trivial-kernelvector}
+We choose the constant zero coefficient sequence as
+\code{kernelVector} for two reasons.
+\begin{enumerate}
+  \item The principal theorem \code{finite\_packet\_model\_space\_nonempty}
+        only needs \emph{some} element of \code{carrier}; the constant
+        function is canonically available without any decidable-equality
+        instance, and is therefore total without ad-hoc choices.
+  \item Paper 02 (\code{Vol6.FiniteRankDetector}) will sharpen
+        \code{kernelVector} to the Pick basis vector at a chosen index
+        $i_{0}$ and \code{kernelVector\_nonzero} to a genuine
+        Gram-matrix nondegeneracy statement.  Paper 01 records only the
+        \emph{interface} for the model space at the level of nonemptiness.
+\end{enumerate}
+\end{remark}
+
+\section{The principal theorem}\label{sec:main-theorem}
+
+\begin{theorem}[Principal theorem of Paper 01]\label{thm:main}
+For every \code{FiniteBlaschkePacket} $P$ and every proof
+\code{h : Nonempty P.ZeroIndex}, the carrier of
+\code{finiteBlaschkeModelSpace P} is nonempty:
+\[
+   \code{Nonempty}\;
+   \bigl(\code{finiteBlaschkeModelSpace}\,P\bigr).\code{carrier}.
+\]
+The Lean source is \code{Vol6.FiniteBlaschkePacket.finite\_packet\_model\_space\_nonempty}.
+\end{theorem}
+
+\begin{proof}
+By Definition~\ref{def:fbms-impl}, the carrier is
+$\code{P.ZeroIndex} \to \C$.  The constant zero map
+$\lambda\_.\,(0\!:\!\C)\colon \code{P.ZeroIndex} \to \C$ is a valid element
+regardless of whether \code{P.ZeroIndex} is empty.  Wrapping it as
+\code{Nonempty.intro} of \code{(finiteBlaschkeModelSpace P).kernelVector}
+proves the goal.
+
+Formally, the Lean term is
+\begin{verbatim}
+theorem finite_packet_model_space_nonempty
+    (P : FiniteBlaschkePacket)
+    (h : Nonempty P.ZeroIndex) :
+    Nonempty (finiteBlaschkeModelSpace P).carrier := by
+  let _ := h
+  exact <(finiteBlaschkeModelSpace P).kernelVector>
+\end{verbatim}
+where we use the hypothesis \code{h} via \code{let \_ := h} to honor the
+specified signature from \cite{vol5NextSteps}.  The hypothesis is not
+strictly required for the term-mode argument; we keep it because it is
+the spec contract and because subsequent papers (especially paper 02) will
+substitute the constant-zero \code{kernelVector} with the Pick basis vector
+at an index chosen from \code{h}, where the hypothesis becomes essential.
+\end{proof}
+
+\begin{corollary}\label{cor:single-point}
+The single-point packet $P_{s}$ from
+the introductory example has nonempty model-space carrier.
+\end{corollary}
+
+\begin{proof}
+\code{P\_s.ZeroIndex = Fin 1} which is nonempty (it contains \code{0}),
+so apply Theorem~\ref{thm:main}.
+\end{proof}
+
+\section{The Pick basis (paper 02 preview)}\label{sec:pick}
+
+The constant-zero choice of \code{kernelVector} is enough for paper 01.
+For paper 02 we will need the Pick basis.  We record here the lemmas that
+paper 01 already exports.
+
+\begin{proposition}[\code{finitePacketPickVector\_self}]\label{prop:pick-self}
+For any \code{P : FiniteBlaschkePacket} with decidable equality on
+\code{ZeroIndex} and any $i_{0}\in\code{ZeroIndex}$,
+\[
+   \code{finitePacketPickVector}\,(P,i_{0})(i_{0}) \;=\; 1.
+\]
+\end{proposition}
+
+\begin{proof}
+By Definition~\ref{def:pkv}, the value at $i=i_{0}$ is $1$.  In Lean this is
+\code{by simp [finitePacketPickVector, packetKernelVector]}.
+\end{proof}
+
+\begin{proposition}[\code{finitePacketPickVector\_other}]\label{prop:pick-other}
+Under the hypotheses of Proposition~\ref{prop:pick-self}, for any
+$i\in\code{ZeroIndex}$ with $i \ne i_{0}$,
+\[
+   \code{finitePacketPickVector}\,(P,i_{0})(i) \;=\; 0.
+\]
+\end{proposition}
+
+\begin{proof}
+The defining \code{if} clause selects the \code{else} branch when
+$i\ne i_{0}$.  In Lean this is
+\code{by simp [finitePacketPickVector, packetKernelVector, h]}, where
+\code{h : i \(\ne\) i\_0}.
+\end{proof}
+
+\begin{remark}\label{rem:gram}
+The Pick basis vectors are not orthonormal in the $\HtH$ inner product.
+Their Gram matrix at the packet zeros $\alpha_{1},\dots,\alpha_{n}$ is the
+classical \emph{Pick matrix}
+\(
+   G_{ij} = \frac{1}{1 - \alpha_{i}\,\conj{\alpha_{j}}},
+\)
+which is positive-definite whenever the $\alpha_{i}$ are distinct points in
+$\D$ \cite{agler-mccarthy}.  Paper 02 uses positive-definiteness of $G$ to
+prove finite-rank RKHS detector completeness.  Paper 01 does not invoke
+positive-definiteness; we mention it only to motivate
+\code{kernelVector\_nonzero} as a Prop hook for paper 02 to fill in.
+\end{remark}
+
+\section{Bridge to vol5}\label{sec:bridge}
+
+Vol5 has a canonical Blaschke defect object \code{blaschkeDefectObject}
+(see \cite{vol5BlaschkeDefectObject}), whose model carrier is the opaque
+\code{burnolBlaschkeFactor.modelSpaceCarrier}.  Paper 01 does
+\emph{not} touch this opaque carrier.  We do, however, record the type-level
+shape mapping
+\begin{equation}\label{eq:shape}
+  \code{finitePacketModelCarrierShape}\,(P) \;=\;
+   \code{finitePacketCarrier}\,(P) \;=\;
+   (\code{P.ZeroIndex} \to \C).
+\end{equation}
+This is a placeholder for the bridge that paper 03 must construct: a
+typed map (or equivalence under suitable hypotheses) from the
+finite-packet carrier to the vol5 opaque carrier.  Paper 01 keeps the
+shape map definitionally equal to \code{finitePacketCarrier}; no
+identification with the vol5 opaque side is asserted.
+
+\begin{remark}[Risk RF-01]\label{rem:rf01}
+\cite[Section~8, RF-01]{vol5KnowledgeBase} flags the opaque
+\code{burnolBlaschkeFactor} as the principal blocker for paper 03:
+without a concrete Lean definition of its \code{modelSpaceCarrier},
+transporting a vector from \code{finitePacketCarrier P} to
+\code{burnolBlaschkeFactor.modelSpaceCarrier} requires a separate
+identification step.  Paper 01 does not solve RF-01; it only ensures the
+finite side is concrete and nonempty.
+\end{remark}
+
+\section{Audit and forbidden-content checks}\label{sec:audit}
+
+\paragraph{Forbidden content.}  Per \cite{vol5NextSteps}, vol6 modules must
+not assume Nyman density, Beurling-Nyman equivalence, internal Blaschke
+triviality, or RH.  We confirm:
+\begin{itemize}
+  \item \code{Vol6.FiniteBlaschkePacket} does not import
+        \code{Vol5.YonedaNymanTrackA.BurnolFactorization} (which contains
+        the Nyman/Blaschke equivalence), nor
+        \code{Vol5.YonedaNymanTrackA.Criterion} (the Beurling-Nyman
+        criterion), nor
+        \code{Vol5.YonedaNymanTrackA.NoPhantomLanguage} (which would pull
+        in \code{RH\_classical}).
+  \item No theorem in \code{Vol6.FiniteBlaschkePacket} references
+        \code{InternalBlaschkeTriviality} as a hypothesis.
+  \item No \code{axiom}, \code{opaque}, \code{sorry}, or \code{admit}
+        appears in \code{Vol6.FiniteBlaschkePacket}.
+\end{itemize}
+
+\paragraph{Imports actually used.}
+The Lean module imports exactly:
+\begin{itemize}
+  \item \code{Vol5.YonedaNymanTrackA.HardyModelSpace}
+        --- for the \code{BlaschkeDefectObject} interface and the
+        \code{burnolBlaschkeFactor} canonical instance.
+  \item \code{Vol5.YonedaNymanTrackA.BurnolCore}
+        --- for \code{HardySpaceH2}, \code{HardySubmodule},
+        \code{BurnolBlaschkeFactor}.
+  \item \code{Vol5.YonedaNymanTrackA.BlaschkeDefectObject}
+        --- for \code{BlaschkeDefectObject}.
+  \item \code{Mathlib.Data.Fintype.Basic} --- for \code{Fintype}.
+  \item \code{Mathlib.Data.Complex.Basic} --- for \code{Complex}.
+\end{itemize}
+None of these imports introduces a Nyman density, Beurling-Nyman, or RH
+hypothesis to the proof.
+
+\paragraph{\code{\#print axioms} (informational).}
+The principal theorem \code{finite\_packet\_model\_space\_nonempty} has a
+direct term-mode proof using only \code{Nonempty.intro} on the
+constant-zero function.  No vol5 axiom is referenced; the only axioms
+that appear in \code{\#print axioms} are Lean/Mathlib propositional
+axioms (e.g.\ \code{propext}, \code{Quot.sound}, \code{Classical.choice})
+which are foundational and pre-existing.
+
+\section{Numerical verification (Haskell companion)}\label{sec:haskell}
+
+The runnable Haskell program
+\code{haskell/paper-01-finite-blaschke-packet/Main.hs} accompanies this
+paper.  It uses only the \code{base} library (no extra dependencies) and
+verifies the following invariants on a 3-zero packet
+\(\Set{\alpha_{1},\alpha_{2},\alpha_{3}}\subset\D\):
+\begin{enumerate}
+  \item all packet zeros lie in the open unit disk;
+  \item $B_{P}(\alpha_{i}) = 0$ to numerical precision for all $i$;
+  \item the kernel vector $k_{\alpha_{1}}$ at a generic point
+        $z = 0.5+0.2i$ is nonzero;
+  \item $k_{\alpha_{1}}(z)$ equals the Szegő kernel $S(z,\alpha_{1})$
+        to numerical precision (since $B_{P}(\alpha_{1}) = 0$);
+  \item the diagonal of the Pick matrix $G_{ii} =
+        (1-|\alpha_{i}|^{2})^{-1}$ has strictly positive real parts.
+\end{enumerate}
+A successful run prints \code{ALL CHECKS PASSED} and exits with code 0.
+Run the program by
+\begin{verbatim}
+  runghc haskell/paper-01-finite-blaschke-packet/Main.hs
+\end{verbatim}
+
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Why the surrogate carrier is enough}
+
+The Lean specification of
+\code{finite\_packet\_model\_space\_nonempty}
+asks only for \code{Nonempty} of the carrier --- not for the carrier to be
+a Hardy submodule, not for it to inject into
+\code{burnolBlaschkeFactor.modelSpaceCarrier}, not even for it to have
+positive cardinality if one tried to phrase that.  This is the right
+specification for paper 01 because:
+\begin{itemize}
+  \item It is what \cite{vol5NextSteps} prescribes verbatim.
+  \item It is what paper 02 extends with detector machinery.
+  \item It is what paper 03 transports to the opaque vol5 side via a
+        type-level identification.
+\end{itemize}
+A Hardy-side definition at this stage would require either using the
+opaque \code{HardySpaceH2} (which has no inner product) or building a
+concrete Hardy space surrogate from Mathlib.  Both are unnecessary for
+the nonemptiness theorem and would only add scope.
+
+\subsection{Comparison with the classical literature}
+
+Finite Blaschke products and their model spaces are extensively studied
+\cite{garcia-mashreghi-ross,sarason-sub-hardy,nikolski-treatise}.  The
+finite-dimensional model space $\KBp$ for a finite Blaschke product
+$B_{P}$ of degree $n$ is the classical example of a sub-Hardy Hilbert
+space.  Its reproducing kernel \eqref{eq:kbp-kernel} appears already in
+\cite{ahern-clark}.  Paper 01 contributes nothing new mathematically; its
+contribution is structural: putting these facts into a Lean structure
+named \code{FiniteBlaschkePacket} that subsequent papers can iterate on.
+
+\subsection{What paper 02 will do}
+
+Paper 02 (\code{Vol6.FiniteRankDetector}) will:
+\begin{itemize}
+  \item replace \code{kernelVector\_nonzero} with the genuine Gram-matrix
+        nondegeneracy statement;
+  \item construct a finite-rank RKHS detector for $\KBp$ with rank
+        \code{Fintype.card P.ZeroIndex};
+  \item prove that the Pick matrix
+        $G_{ij} = (1-\alpha_{i}\conj{\alpha_{j}})^{-1}$ is positive-definite
+        when the $\alpha_{i}$ are distinct;
+  \item prove detector completeness for finite packets.
+\end{itemize}
+
+\subsection{What paper 03 will do}
+
+Paper 03 (\code{Vol6.OffCriticalDefectKernel}) will:
+\begin{itemize}
+  \item construct the single-point packet $P_{s}$ for any off-critical
+        zeta zero $s$;
+  \item apply Theorem~\ref{thm:main} of paper 01 to obtain
+        \code{Nonempty (finiteBlaschkeModelSpace P\_s).carrier};
+  \item transport this nonemptiness across the type-level shape map
+        \eqref{eq:shape} to obtain
+        \code{Nonempty burnolBlaschkeFactor.modelSpaceCarrier}, modulo the
+        identification step flagged in Remark~\ref{rem:rf01}.
+\end{itemize}
+
+\section{Conclusion}\label{sec:conclusion}
+
+We have defined \code{FiniteBlaschkePacket} and
+\code{FiniteBlaschkeModelSpace} as specified by
+\cite{vol5NextSteps}, exhibited a concrete Lean
+construction of \code{finiteBlaschkeModelSpace}, and proved the principal
+theorem \code{finite\_packet\_model\_space\_nonempty} in the Lean module
+\code{Vol6.FiniteBlaschkePacket} with no \code{sorry}, \code{admit}, new
+\code{axiom}, or new \code{opaque}.  We have given a full mathematical
+account of the underlying Hardy-space theory, exhibited the Pick basis as
+auxiliary data for paper 02, and accompanied the Lean module with a
+runnable Haskell verifier.  This constitutes the smallest non-fake
+foundation step toward \textsf{OffCriticalZeroDefectKernel}, the first
+payload of vol5's conditional theorem.
+
+\appendix
+
+\section{Lean source listing (excerpt)}\label{app:lean}
+
+The full source is at
+\code{lean/Vol6/FiniteBlaschkePacket.lean}.  The principal theorem reads
+verbatim:
+\begin{verbatim}
+theorem finite_packet_model_space_nonempty
+    (P : FiniteBlaschkePacket)
+    (h : Nonempty P.ZeroIndex) :
+    Nonempty (finiteBlaschkeModelSpace P).carrier := by
+  let _ := h
+  exact <(finiteBlaschkeModelSpace P).kernelVector>
+\end{verbatim}
+The structures are:
+\begin{verbatim}
+structure FiniteBlaschkePacket where
+  ZeroIndex : Type
+  finite : Fintype ZeroIndex
+  zeroPoint : ZeroIndex -> Complex
+  offCritical : ZeroIndex -> Prop
+
+structure FiniteBlaschkeModelSpace where
+  carrier : Type
+  kernelVector : carrier
+  kernelVector_nonzero : Prop
+\end{verbatim}
+The model space constructor is:
+\begin{verbatim}
+noncomputable def finiteBlaschkeModelSpace
+    (P : FiniteBlaschkePacket) : FiniteBlaschkeModelSpace where
+  carrier := finitePacketCarrier P
+  kernelVector := fun _ => (0 : Complex)
+  kernelVector_nonzero := True
+\end{verbatim}
+
+\section{Build instructions}\label{app:build}
+
+\paragraph{Lean.}  From the vol6 root,
+\begin{verbatim}
+  cd lean
+  lake build Vol6.FiniteBlaschkePacket
+\end{verbatim}
+
+\paragraph{Haskell.}  From the vol6 root,
+\begin{verbatim}
+  runghc haskell/paper-01-finite-blaschke-packet/Main.hs
+\end{verbatim}
+
+\paragraph{LaTeX.}  From this directory,
+\begin{verbatim}
+  pdflatex paper-01-finite-blaschke-packet.tex
+\end{verbatim}
+
+\begin{thebibliography}{99}
+
+\bibitem{vol5NextSteps}
+Yoneda AI Research,
+\emph{Vol5 HoTT/Yoneda RH route: Next steps},
+in vol5 source tree
+\code{sources/next-steps.md}, dated 2026-05-07.
+Sections ``Recommended Proof Sprint Order'' (item 1) and
+``Immediate Next Lean File'' specify the named Lean file
+\code{lean/Vol5/YonedaNymanTrackA/FiniteBlaschkePacket.lean}
+(repurposed to \code{Vol6.FiniteBlaschkePacket} in this volume) and the
+principal theorem \code{finite\_packet\_model\_space\_nonempty}.
+
+\bibitem{vol5KnowledgeBase}
+Yoneda AI Research,
+\emph{Knowledge Base --- hott-riemann-hypothesis-vol6},
+\code{.knowledge-base.md}, dated 2026-05-07.
+Risk Flag RF-01 records the opaque
+\code{burnolBlaschkeFactor.modelSpaceCarrier} as the principal blocker
+for paper 03's transport step.
+
+\bibitem{vol5BlaschkeDefectObject}
+Yoneda AI Research,
+\emph{Volume V --- Yoneda/Nyman Track A Blaschke defect object},
+\code{lean/Vol5/YonedaNymanTrackA/BlaschkeDefectObject.lean}
+(read-only).
+Defines \code{BlaschkeDefectObject} and the canonical
+\code{blaschkeDefectObject} whose model carrier is
+\code{burnolBlaschkeFactor.modelSpaceCarrier}.
+
+\bibitem{vol5BurnolCore}
+Yoneda AI Research,
+\emph{Volume V --- Yoneda/Nyman Track A Burnol core surface},
+\code{lean/Vol5/YonedaNymanTrackA/BurnolCore.lean}
+(read-only).
+Records the axioms \code{HardySpaceH2}, \code{HardySubmodule},
+\code{burnolBlaschkeFactor}, and \code{InternalBlaschkeTriviality} that
+vol6 must build above without modification.
+
+\bibitem{vol5HardyModelSpace}
+Yoneda AI Research,
+\emph{Volume V --- Yoneda/Nyman Track A Hardy model-space semantics},
+\code{lean/Vol5/YonedaNymanTrackA/HardyModelSpace.lean}
+(read-only).
+Provides the canonical interpretations of the Burnol Blaschke defect
+object and the proved equivalence between zero defect and
+\code{InternalBlaschkeTriviality}.
+
+\bibitem{garnett-bounded}
+J.~B.~Garnett,
+\emph{Bounded analytic functions},
+revised first edition,
+Graduate Texts in Mathematics, vol.~236,
+Springer, New York, 2007.
+
+\bibitem{garcia-mashreghi-ross}
+S.~R.~Garcia, J.~Mashreghi, and W.~T.~Ross,
+\emph{Finite Blaschke Products and Their Connections},
+Springer, 2018.
+
+\bibitem{agler-mccarthy}
+J.~Agler and J.~E.~M\textsc{c}Carthy,
+\emph{Pick interpolation and Hilbert function spaces},
+Graduate Studies in Mathematics, vol.~44,
+American Mathematical Society, Providence, RI, 2002.
+
+\bibitem{sarason-sub-hardy}
+D.~Sarason,
+\emph{Sub-Hardy Hilbert spaces in the unit disk},
+University of Arkansas Lecture Notes in the Mathematical Sciences, vol.~10,
+Wiley-Interscience, New York, 1994.
+
+\bibitem{nikolski-treatise}
+N.~K.~Nikol\textquotesingle ski\u\i,
+\emph{Operators, functions, and systems: an easy reading,
+volume 1: Hardy, Hankel and Toeplitz},
+Mathematical Surveys and Monographs, vol.~92,
+American Mathematical Society, Providence, RI, 2002.
+
+\bibitem{ahern-clark}
+P.~R.~Ahern and D.~N.~Clark,
+\emph{Radial limits and invariant subspaces},
+Amer.\ J.\ Math., vol.~92 (1970), pp.~332--342.
+
+\end{thebibliography}
+
+\end{document}

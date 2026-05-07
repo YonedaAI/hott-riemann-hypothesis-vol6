@@ -1,0 +1,34 @@
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Position in the volume}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}What this paper does --- and what it does \emph {not} do}{3}{subsection.1.2}%
+\contentsline {paragraph}{Does:}{3}{section*.2}%
+\contentsline {paragraph}{Does not:}{3}{section*.3}%
+\contentsline {paragraph}{Scope:}{3}{section*.4}%
+\contentsline {section}{\numberline {2}Mathematical Framework}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Single Möbius factor}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Finite Blaschke product}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Hardy space and the model space}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}The reproducing kernel of \(K_{B_{P}}\)}{4}{subsection.2.4}%
+\contentsline {section}{\numberline {3}The structures}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Finite Blaschke packet}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Finite Blaschke model space}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Construction of the model space}{6}{subsection.3.3}%
+\contentsline {section}{\numberline {4}The principal theorem}{6}{section.4}%
+\contentsline {section}{\numberline {5}The Pick basis (paper 02 preview)}{7}{section.5}%
+\contentsline {section}{\numberline {6}Bridge to vol5}{7}{section.6}%
+\contentsline {section}{\numberline {7}Audit and forbidden-content checks}{8}{section.7}%
+\contentsline {paragraph}{Forbidden content.}{8}{section*.5}%
+\contentsline {paragraph}{Imports actually used.}{8}{section*.6}%
+\contentsline {paragraph}{\texttt {\#print axioms} (informational).}{8}{section*.7}%
+\contentsline {section}{\numberline {8}Numerical verification (Haskell companion)}{8}{section.8}%
+\contentsline {section}{\numberline {9}Discussion}{9}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Why the surrogate carrier is enough}{9}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Comparison with the classical literature}{9}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}What paper 02 will do}{9}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}What paper 03 will do}{9}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Conclusion}{10}{section.10}%
+\contentsline {section}{\numberline {A}Lean source listing (excerpt)}{10}{appendix.A}%
+\contentsline {section}{\numberline {B}Build instructions}{10}{appendix.B}%
+\contentsline {paragraph}{Lean.}{10}{section*.8}%
+\contentsline {paragraph}{Haskell.}{10}{section*.9}%
+\contentsline {paragraph}{LaTeX.}{11}{section*.10}%

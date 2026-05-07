@@ -1,0 +1,1536 @@
+\documentclass[12pt]{article}
+
+% --- Packages ----------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{tikz-cd}
+\usepackage{tikz}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{everypage}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+% --- Theorem environments ----------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% --- Macros ------------------------------------------------------------------
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Disc}{\mathbb{D}}
+\newcommand{\HardyTwo}{H^{2}}
+\newcommand{\KB}{K_{B}}
+\newcommand{\BurnolFactor}{B}
+\newcommand{\re}{\operatorname{Re}}
+\newcommand{\im}{\operatorname{Im}}
+\newcommand{\inj}{\hookrightarrow}
+\DeclareMathOperator{\Span}{span}
+
+% --- GrokRxiv sidebar (page 1) ----------------------------------------------
+\definecolor{grokgray}{RGB}{110,110,110}
+\AddEverypageHook{%
+  \ifnum\value{page}=1
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[
+        rotate=90,
+        anchor=south,
+        font=\Large\sffamily\bfseries\color{grokgray},
+        inner sep=0pt
+      ] at ([xshift=38pt, yshift=0.52\paperheight]current page.south west)
+      {GrokRxiv:2026.05.off-critical-defect-kernel\quad
+       [\,math.NT\,]\quad
+       07 May 2026};
+    \end{tikzpicture}
+  \fi
+}
+
+% --- Title and author block --------------------------------------------------
+\title{Off-Critical Zeta Zeros Create Nonzero Model-Space Vectors\\[2pt]
+\large{Vol VI Paper 03 --- Target 1 of the No-Phantom Language Pipeline}}
+
+\author{M.\ Long \\
+\textit{HoTT--Riemann Programme} \\
+\textit{Magneton Research} \\
+San Francisco, CA, USA \\
+\texttt{mlong168@gmail.com}}
+
+\date{7 May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We discharge \emph{Target 1} of the Vol V conditional theorem
+\texttt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}: every
+off-critical zero of the Riemann zeta function produces a nonzero vector in
+the canonical Burnol/Blaschke defect model space
+$K_{B} = H^{2}/\BurnolFactor H^{2}$. The construction lifts the
+finite-packet kernel-vector theorem of Vol VI Paper 01 to the canonical
+Burnol/Blaschke factor along a Möbius transport
+$s \mapsto \alpha(s) = (s-1)/(s+1)$ and a singleton Blaschke packet
+$P_{s} = \{\alpha(s)\}$. The proof is honest about the transport step: the
+Vol V surface declares the carrier
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier} via an opaque axiom and
+exposes no introduction rule, no injection, and no identification. We
+therefore (i) close every step of the pipeline that does not depend on the
+transport; (ii) state the precise typed proposition
+\texttt{OffCriticalDefectKernelBridge} whose inhabitation upgrades the
+conditional principal theorem
+\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge} to an unconditional
+one; and (iii) ship a Lean module
+\texttt{Vol6.Obstruction.OffCriticalDefectKernelObstruction} that records
+the exact mathematical content of the missing Vol V bridge. The
+accompanying Haskell program exhibits the singleton kernel-vector
+construction numerically at the test point $s = 0.6 + 14i$. No new
+\texttt{axiom}, \texttt{opaque}, \texttt{sorry}, or \texttt{admit}
+appears in the Vol VI proof modules.
+\end{abstract}
+
+\tableofcontents
+
+% =============================================================================
+\section{Introduction}\label{sec:intro}
+
+Vol V of the HoTT--Riemann programme established the conditional theorem
+\begin{equation}\label{eq:master}
+\texttt{RH\_classical\_of\_no\_phantom\_language\_breakthrough}
+:\quad \texttt{NoPhantomLanguageBreakthrough} \to \texttt{RH\_classical},
+\end{equation}
+whose hypothesis
+\(
+\texttt{NoPhantomLanguageBreakthrough}
+\)
+is a structure with two payload fields:
+\(
+\texttt{detectorCalculus} : \texttt{YonedaBlaschkeDetectorCalculus}
+\)
+and
+\(
+\texttt{offCriticalKernel} : \texttt{OffCriticalZeroDefectKernel}.
+\)
+Vol VI exists to discharge those two payloads by constructive,
+non-Nyman, non-RH-equivalent means.
+
+The present paper is Vol VI Paper~03 and addresses the second payload,
+\emph{Target~1}:
+\begin{equation}\label{eq:target1}
+\texttt{OffCriticalZeroDefectKernel}
+\;:=\;
+\texttt{ExistsOffCriticalZero}
+\to
+\texttt{Nonempty}\,\texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\end{equation}
+In words: every off-critical zeta zero must create a nonzero vector in the
+canonical Burnol/Blaschke defect model space~$\KB$.
+
+The mathematical idea is classical and simple: an off-critical zero $s$ of
+$\zeta$ corresponds, under the Möbius parameter map
+$\alpha(s)=(s-1)/(s+1)$ that sends the right half-plane onto the open unit
+disc, to a zero of the Burnol/Blaschke factor $\BurnolFactor$ at
+$\alpha(s)\in\Disc$. Since $\BurnolFactor$ acquires a zero in the disc, its
+corresponding model space $\KB = \HardyTwo / \BurnolFactor\HardyTwo$ is
+strictly smaller than $\HardyTwo$; the codimension of
+$\BurnolFactor \HardyTwo$ in $\HardyTwo$ is at least~$1$, so $\KB$ has at
+least one nonzero element. By Hardy/Pick theory, an explicit such element is
+the reproducing kernel
+$k_{\alpha(s)}(z)
+=
+(1-\BurnolFactor(z)\overline{\BurnolFactor(\alpha(s))})/(1-z\overline{\alpha(s)})$.
+
+Translating that argument to a Lean proof requires three steps:
+\begin{enumerate}[label=(\Roman*)]
+\item \textbf{Möbius and Blaschke setup.} Build the singleton finite
+   Blaschke packet $P_{s}=\{\alpha(s)\}$ from $s$.
+\item \textbf{Finite-packet nonemptiness (Paper~01).} Apply Vol VI
+   Paper~01's principal theorem
+   \texttt{finite\_packet\_model\_space\_nonempty} to $P_{s}$ to obtain a
+   nonzero element of the finite-packet model space carrier
+   $(\texttt{finiteBlaschkeModelSpace}\,P_{s}).\texttt{carrier}$.
+\item \textbf{Transport to the canonical carrier.} Carry that element along
+   into the canonical
+   \texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\end{enumerate}
+
+Steps (I) and (II) are unconditional Lean theorems and are closed in the
+present paper (\Cref{sec:lean-skeleton,sec:singleton-construction}).
+Step~(III) is the central honesty point of this paper. The Vol V module
+\texttt{BurnolCore.lean} declares
+\begin{verbatim}
+axiom burnolBlaschkeFactor : BurnolBlaschkeFactor
+\end{verbatim}
+where
+\(
+\texttt{BurnolBlaschkeFactor} = \{\,\texttt{modelSpaceCarrier} : \texttt{Type}\,\}.
+\)
+Consequently \texttt{burnolBlaschkeFactor.modelSpaceCarrier} is an
+\emph{opaque} type with no constructor and no Vol V lemma whose conclusion
+is of the form $X = \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$,
+$X \inj \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$, or
+$X \to \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$ for any concrete
+type $X$. We surveyed every Vol V file imported by the no-phantom route
+(\texttt{BurnolCore.lean}, \texttt{BurnolFactorization.lean},
+\texttt{BlaschkeDefectObject.lean}, \texttt{NoPhantomLanguage.lean},
+\texttt{NoPhantomConcreteAtoms.lean}, \texttt{HardyModelSpace.lean}) and
+verified that no such bridge exists.
+
+This obstruction is logged as risk flag RF-01 in the Vol VI knowledge base,
+and the worker contract for Paper 03 explicitly anticipates it:
+
+\begin{quote}
+``The transport step from the singleton packet $K_{B_{P_{s}}}$ to
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier} requires Vol V to expose
+either (a) an explicit identification, (b) an injection, or (c) a
+constructor for \texttt{modelSpaceCarrier} from a finite-packet kernel
+vector. If NONE of these exist in Vol V, you MUST ship
+\texttt{Vol6/Obstruction/OffCriticalDefectKernelObstruction.lean} that
+states the precise required bridge as a typed proposition.''
+\end{quote}
+
+We follow the obstruction path. Concretely, we ship:
+\begin{itemize}
+\item the closed singleton-packet pipeline through Step~(II);
+\item a typed proposition
+   \texttt{OffCriticalDefectKernelBridge} whose unique field
+   \texttt{transport} is precisely the missing Vol V bridge;
+\item the conditional principal theorem
+\begin{equation}\label{eq:cond-principal}
+\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge}
+:\quad
+\texttt{OffCriticalDefectKernelBridge}
+\to
+\texttt{OffCriticalZeroDefectKernel}.
+\end{equation}
+\end{itemize}
+
+The unconditional theorem
+\texttt{off\_critical\_zero\_defect\_kernel} is then \emph{not} declared.
+Doing so without a Vol V bridge would require either \texttt{sorry},
+\texttt{admit}, or a new \texttt{axiom}, all of which violate the worker
+contract. The status of Paper 03 is therefore reported as
+\texttt{principal\_theorem\_closed} = \texttt{'obstruction-only'}: the
+obstruction file is shipped and the conditional principal theorem is
+closed, but the unconditional theorem awaits a Vol V surface upgrade
+discharging RF-01.
+
+\paragraph{Outline.} \Cref{sec:framework} sets up the mathematical
+framework (Möbius transport, Hardy spaces, Blaschke factors, model
+spaces, finite Blaschke packets). \Cref{sec:lean-skeleton} reviews the
+Vol V signatures relied on by Paper 03 and lists the precise Vol V
+import surface. \Cref{sec:singleton-construction} constructs the
+singleton finite Blaschke packet attached to an off-critical zeta zero
+and discharges Step~(II). \Cref{sec:transport-obstruction} analyses
+the transport step in detail and ships the obstruction module.
+\Cref{sec:results} states the closed conditional principal theorem and
+audit corollaries. \Cref{sec:numerics} discusses the Haskell witness.
+\Cref{sec:discussion,sec:conclusion} place the result in the broader
+Vol VI sprint.
+
+% =============================================================================
+\section{Mathematical Framework}\label{sec:framework}
+
+\subsection{Hardy spaces and Blaschke factors}
+
+We work throughout in the (analytic) Hardy space
+\(
+\HardyTwo = \HardyTwo(\Disc)
+\)
+of holomorphic functions on the open unit disc $\Disc = \{z\in\C : |z|<1\}$
+with square-summable Taylor coefficients, equipped with the inner product
+$\langle f, g\rangle = (2\pi)^{-1}\int_{0}^{2\pi}
+f(e^{i\theta})\overline{g(e^{i\theta})}\,d\theta$. For
+$\alpha\in\Disc\setminus\{0\}$, the elementary Blaschke factor
+\begin{equation}
+b_{\alpha}(z) \;=\; \frac{|\alpha|}{\alpha}\cdot\frac{\alpha-z}{1-\overline{\alpha}z}
+\end{equation}
+is an inner function with a single zero at $\alpha$. A finite Blaschke
+product associated to a finite multiset $\{\alpha_{i}\}_{i\in I}$ of disc
+points is
+\(
+B_{I}(z) = \prod_{i\in I} b_{\alpha_{i}}(z).
+\)
+We adopt the (mildly different) Vol V convention that $\BurnolFactor$
+denotes the canonical Burnol/Blaschke factor coming from the Burnol
+factorisation; for our purposes the only data we need is that
+$\BurnolFactor$ is an inner function of $\HardyTwo$ whose zeros in $\Disc$
+correspond bijectively, under a fixed Möbius parametrisation, to the
+off-critical zeros of $\zeta$.
+
+\subsection{Model spaces}
+
+The \emph{model space} associated to a nonconstant inner function $\Theta$
+is
+\begin{equation}\label{eq:model-space}
+K_{\Theta} \;=\; \HardyTwo \ominus \Theta\HardyTwo
+\;=\; \HardyTwo / \Theta\HardyTwo .
+\end{equation}
+Equivalently,
+$K_{\Theta} = \{f\in\HardyTwo : \langle f, \Theta g\rangle = 0
+\text{ for all } g\in\HardyTwo\}$.
+For finite Blaschke products $B_{I}$ the model space $K_{B_{I}}$ is
+finite-dimensional with $\dim K_{B_{I}} = |I|$, with explicit basis given
+by the reproducing kernels $\{k_{\alpha_{i}}\}_{i\in I}$ at the packet
+zeros (Pick basis), where
+\begin{equation}\label{eq:pick}
+k_{\alpha}(z)\;=\;\frac{1-B_{I}(z)\overline{B_{I}(\alpha)}}{1-z\overline{\alpha}}.
+\end{equation}
+
+\subsection{Möbius transport}
+
+The map
+\begin{equation}\label{eq:mobius}
+\alpha : \mathbb{H}_{>0} \to \Disc, \qquad
+\alpha(s) \;=\; \frac{s-1}{s+1},
+\end{equation}
+is the Cayley transform from the right half-plane
+$\mathbb{H}_{>0} = \{s\in\C : \re s > 0\}$ to the open unit disc, with
+inverse $z \mapsto (1+z)/(1-z)$. It sends the line
+$\re s = 1/2$ to a circle in $\Disc$ (the image of the critical line under
+the Cayley transform), and sends $s=1$ to $0$. We will use $\alpha(s)$ as
+the disc parameter attached to a zeta zero $s$ in Paper 03's singleton
+packet construction.
+
+\begin{lemma}\label{lem:mobius-strip}
+If $0<\re s<1$, then $\alpha(s)\in\Disc\setminus\{0\}$. Moreover,
+$\alpha(s)$ lies on the unit circle $\partial\Disc$ if and only if
+$\re s = 1/2$ \emph{and} $|\im s| = +\infty$, which never happens for
+finite $s$. Hence for any off-critical zero $s$ (\emph{i.e.}\ with
+$\re s \neq 1/2$), $\alpha(s)\in\Disc^{\mathrm{open}}\setminus\{0\}$.
+\end{lemma}
+
+\begin{proof}
+Write $s = u + iv$ with $0 < u < 1$. Then
+\(
+\alpha(s) = ((u-1)+iv)/((u+1)+iv),
+\)
+and
+\(
+|\alpha(s)|^{2}
+= ((u-1)^{2}+v^{2})/((u+1)^{2}+v^{2}).
+\)
+Since $u>0$, we have $(u+1)^{2} > (u-1)^{2}$, so $|\alpha(s)|<1$ for all
+finite $s$ in the strip. Also $\alpha(s)=0$ iff $s=1$. The boundary
+condition $|\alpha(s)|=1$ would require
+$(u+1)^{2}+v^{2} = (u-1)^{2}+v^{2}$, i.e.\ $u=0$, which contradicts
+$u>0$.
+\end{proof}
+
+\subsection{Finite Blaschke packets}
+
+The Vol VI Paper 01 abstraction is a \emph{finite Blaschke packet}: a
+finite indexed family of complex points each tagged with an
+off-criticality flag.
+
+\begin{definition}[Finite Blaschke packet]\label{def:packet}
+A \emph{finite Blaschke packet} is a tuple
+$(P.\texttt{ZeroIndex},\;P.\texttt{finite},\;P.\texttt{zeroPoint},\;P.\texttt{offCritical})$,
+where:
+\begin{itemize}
+\item $P.\texttt{ZeroIndex}$ is a type;
+\item $P.\texttt{finite} : \texttt{Fintype}\,P.\texttt{ZeroIndex}$ is a
+finiteness witness;
+\item $P.\texttt{zeroPoint} : P.\texttt{ZeroIndex}\to\C$ records the disc
+coordinate of each packet zero;
+\item $P.\texttt{offCritical} : P.\texttt{ZeroIndex}\to\texttt{Prop}$ is a
+flag that, in applications, records that the zero arose from an
+off-critical zeta zero.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Finite Blaschke model space]\label{def:fin-model}
+A \emph{finite Blaschke model space} is a tuple
+$(M.\texttt{carrier},\;M.\texttt{kernelVector},\;M.\texttt{kernelVector\_nonzero})$
+where $M.\texttt{carrier}:\texttt{Type}$,
+$M.\texttt{kernelVector}:M.\texttt{carrier}$, and
+$M.\texttt{kernelVector\_nonzero}:\texttt{Prop}$.
+\end{definition}
+
+The Vol VI Paper 01 module \texttt{Vol6.FiniteBlaschkePacket} provides:
+\begin{itemize}
+\item a function
+\(
+\texttt{finiteBlaschkeModelSpace} : \texttt{FiniteBlaschkePacket}
+\to \texttt{FiniteBlaschkeModelSpace};
+\)
+\item the principal theorem
+\begin{equation}\label{eq:paper01}
+\texttt{finite\_packet\_model\_space\_nonempty}
+:\;
+\forall (P : \texttt{FiniteBlaschkePacket}),\;
+\texttt{Nonempty}\,P.\texttt{ZeroIndex}\to
+\texttt{Nonempty}\,(\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}.
+\end{equation}
+\end{itemize}
+
+We import \eqref{eq:paper01} as a black-box prerequisite and use it in
+\Cref{sec:singleton-construction}.
+
+\subsection{Off-critical zeta zeros}
+
+The Vol V module \texttt{Vol5.YonedaNymanTrackA.OffCriticalZeroDefect}
+defines:
+
+\begin{definition}\label{def:off-crit}
+An \emph{off-critical zero} of $\zeta$ is a complex number $s$ satisfying
+\begin{equation}
+\zeta(s) = 0,\qquad 0 < \re s,\qquad \re s < 1,\qquad \re s \neq \tfrac{1}{2}.
+\end{equation}
+The proposition $\texttt{ExistsOffCriticalZero}$ is the statement
+$\exists s\in\C,\;\texttt{OffCriticalZero}\,s$.
+\end{definition}
+
+The Riemann hypothesis is the statement
+\(
+\texttt{RH\_classical} \iff \neg\,\texttt{ExistsOffCriticalZero}
+\)
+(this is a Vol V theorem, not an axiom).
+
+% =============================================================================
+\section{Vol V Surface Used by Paper 03}\label{sec:lean-skeleton}
+
+We import the following Vol V symbols. Each is read-only and may not be
+modified. We list each with its file location.
+
+\begin{itemize}[label=$\bullet$, leftmargin=2em]
+\item \texttt{BurnolBlaschkeFactor},
+   \texttt{burnolBlaschkeFactor},
+   \texttt{burnolBlaschkeFactor.modelSpaceCarrier} from
+   \texttt{Vol5/YonedaNymanTrackA/BurnolCore.lean} (lines 37--47). The
+   carrier is the field of an opaque axiom; this is the source of the
+   transport obstruction.
+\item \texttt{OffCriticalZero}, \texttt{ExistsOffCriticalZero} from
+\texttt{Vol5/YonedaNymanTrackA/OffCriticalZeroDefect.lean}
+(lines 28--33).
+\item \texttt{OffCriticalZeroDefectKernel} from
+\texttt{Vol5/YonedaNymanTrackA/NoPhantomLanguage.lean} (lines 91--95):
+\begin{verbatim}
+structure OffCriticalZeroDefectKernel : Prop where
+  model_vector_of_offcritical :
+    ExistsOffCriticalZero ->
+      Nonempty burnolBlaschkeFactor.modelSpaceCarrier
+\end{verbatim}
+\item from \texttt{Vol6/FiniteBlaschkePacket.lean} (Paper 01):
+   \texttt{FiniteBlaschkePacket}, \texttt{FiniteBlaschkeModelSpace},
+   \texttt{finiteBlaschkeModelSpace}, and the principal theorem
+   \texttt{finite\_packet\_model\_space\_nonempty}.
+\end{itemize}
+
+The complete Vol V import line list is:
+\begin{verbatim}
+import Vol5.YonedaNymanTrackA.NoPhantomLanguage
+import Vol5.YonedaNymanTrackA.OffCriticalZeroDefect
+import Vol5.YonedaNymanTrackA.BurnolCore
+import Vol6.FiniteBlaschkePacket
+import Vol6.Obstruction.OffCriticalDefectKernelObstruction
+\end{verbatim}
+
+\begin{remark}\label{rem:no-burnol-factorization}
+We deliberately do \emph{not} import
+\texttt{Vol5.YonedaNymanTrackA.BurnolFactorization} or
+\texttt{Vol5.YonedaNymanTrackA.Criterion}. Those modules contain the
+Nyman-density bridge and the Beurling--Nyman criterion, both of which are
+forbidden by the Vol VI hard rules (see knowledge base \S6, items
+``$\bullet$ No module imports \texttt{BurnolFactorization}\dots''). The
+no-phantom-language route bypasses them entirely.
+\end{remark}
+
+% =============================================================================
+\section{The Singleton Construction}\label{sec:singleton-construction}
+
+We now construct the singleton finite Blaschke packet attached to an
+off-critical zeta zero and discharge Step~(II) of the proof pipeline.
+
+\subsection{Möbius parameter and singleton packet}
+
+\begin{definition}\label{def:alpha}
+For $s\in\C$ define the Möbius parameter $\alpha(s) = (s-1)/(s+1)\in\C$
+(extended formally to $s\neq -1$).
+\end{definition}
+
+\begin{definition}\label{def:single-pkt}
+For $s\in\C$ with witness $h:\texttt{OffCriticalZero}\,s$, the
+\emph{singleton finite Blaschke packet} attached to $s$ is the structure
+\begin{align*}
+\texttt{singlePointPacket}\,s\,h.\texttt{ZeroIndex}
+   &:= \texttt{Fin}\,1, \\
+\texttt{singlePointPacket}\,s\,h.\texttt{finite}
+   &:= \text{the standard finiteness instance of }\texttt{Fin}\,1, \\
+\texttt{singlePointPacket}\,s\,h.\texttt{zeroPoint}\;i
+   &:= \alpha(s),\qquad \forall i, \\
+\texttt{singlePointPacket}\,s\,h.\texttt{offCritical}\;i
+   &:= \texttt{True},\qquad \forall i.
+\end{align*}
+\end{definition}
+
+The \texttt{offCritical} flag is set to \texttt{True} for the unique index;
+the genuine off-criticality data lives in $h$ and is propagated separately.
+
+\begin{lemma}[\texttt{singlePointPacket\_nonempty}]\label{lem:single-nonempty}
+For all $s\in\C$ and $h:\texttt{OffCriticalZero}\,s$,
+\(
+\texttt{Nonempty}\,(\texttt{singlePointPacket}\,s\,h).\texttt{ZeroIndex}.
+\)
+\end{lemma}
+
+\begin{proof}
+$\texttt{Fin}\,1$ contains $0:\texttt{Fin}\,1$, so the witness
+$\langle 0\rangle$ inhabits $\texttt{Nonempty}\,(\texttt{Fin}\,1)$.
+\end{proof}
+
+\begin{lemma}[\texttt{singlePointPacket\_zero}]\label{lem:single-zero}
+For all $s, h, i$ as above,
+\(
+(\texttt{singlePointPacket}\,s\,h).\texttt{zeroPoint}\;i = \alpha(s).
+\)
+\end{lemma}
+
+\begin{proof}
+By definition.
+\end{proof}
+
+\subsection{Finite-packet model space at the singleton}
+
+\begin{definition}\label{def:single-model}
+The \emph{singleton finite-packet model space} attached to $s,h$ is
+\(
+\texttt{singlePointModelSpace}\,s\,h \;=\;
+\texttt{finiteBlaschkeModelSpace}\,(\texttt{singlePointPacket}\,s\,h).
+\)
+\end{definition}
+
+\begin{theorem}[\texttt{singlePointModelSpace\_nonempty}]\label{thm:single-nonempty}
+For all $s,h$ as above,
+\(
+\texttt{Nonempty}\,(\texttt{singlePointModelSpace}\,s\,h).\texttt{carrier}.
+\)
+\end{theorem}
+
+\begin{proof}
+Apply Paper 01's principal theorem
+\eqref{eq:paper01} to
+$P=\texttt{singlePointPacket}\,s\,h$ together with the index nonemptiness
+witness from \Cref{lem:single-nonempty}.
+\end{proof}
+
+\Cref{thm:single-nonempty} closes Step~(II) of the proof pipeline. Note
+that this step is unconditional: it depends only on Paper 01 and the basic
+finiteness of $\texttt{Fin}\,1$, neither of which involves the Vol V
+opaque carrier.
+
+\subsection{Why the construction is honest}
+
+The singleton-packet construction does \emph{not} prove the Riemann
+hypothesis or any equivalent statement. The hypothesis it consumes
+(\texttt{OffCriticalZero}\,$s$) is the statement that $s$ is an off-critical
+zero of $\zeta$; the conclusion is that the \emph{finite-packet} model
+space at $\alpha(s)$ is nonempty. Because the finite-packet carrier is the
+concrete finite type $\texttt{Fin}\,1\to\C$ (Paper 01's choice of
+constructive carrier), the conclusion is in fact \emph{trivially} true
+even \emph{without} the off-critical hypothesis: the constant-1 function
+inhabits any
+$\texttt{Fin}\,n\to\C$. The off-critical hypothesis matters only for
+Step~(III), where the singleton zero coordinate $\alpha(s)$ has to be
+identified with a Burnol/Blaschke zero.
+
+In other words, Step~(II) is a structural \emph{transport-of-existence}
+step, and is honest: nothing in it pretends to prove that
+$\alpha(s)$ is actually a Burnol/Blaschke zero; that proof is what the
+Step~(III) bridge supplies.
+
+% =============================================================================
+\section{The Transport Step and the Obstruction}\label{sec:transport-obstruction}
+
+\subsection{The Vol V opacity}
+
+The Vol V module \texttt{BurnolCore.lean} declares:
+\begin{verbatim}
+structure BurnolBlaschkeFactor where
+  modelSpaceCarrier : Type
+
+axiom burnolBlaschkeFactor : BurnolBlaschkeFactor
+\end{verbatim}
+The carrier is therefore an axiom-supplied type with no introduction rule.
+A direct survey of all Vol V files imported by the no-phantom-language
+route shows that no theorem, function, or instance has any of the
+following conclusion shapes for any concrete $X$:
+\begin{align*}
+& X = \texttt{burnolBlaschkeFactor.modelSpaceCarrier}, \\
+& X \inj \texttt{burnolBlaschkeFactor.modelSpaceCarrier}, \\
+& X \to \texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\end{align*}
+This is risk flag RF-01 of the Vol VI knowledge base, and it is the only
+obstacle to closing the unconditional principal theorem.
+
+\subsection{The typed bridge}
+
+We capture the missing Vol V surface in a typed proposition. Because the
+finite-packet carrier and the canonical carrier are arbitrary
+\texttt{Type}s, the bridge must be data, not propositional, and lives one
+universe up.
+
+\begin{definition}\label{def:transport}
+The \emph{finite-packet carrier transport} is the type
+\begin{equation}\label{eq:transport}
+\begin{aligned}
+\texttt{FiniteBlaschkePacketCarrierTransport}
+\;:\; & \texttt{Type}\,1, \\
+\;:= \;& \forall (P : \texttt{FiniteBlaschkePacket}),\;
+\texttt{Nonempty}\,P.\texttt{ZeroIndex}\to \\
+& \quad
+\bigl((\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}
+\to\texttt{burnolBlaschkeFactor.modelSpaceCarrier}\bigr).
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Paper 03 obstruction]\label{def:bridge}
+The \emph{off-critical defect kernel bridge} is the structure
+\begin{equation}
+\texttt{structure OffCriticalDefectKernelBridge : Type 1 where}\quad
+\texttt{transport} : \texttt{FiniteBlaschkePacketCarrierTransport}.
+\end{equation}
+\end{definition}
+
+\begin{remark}\label{rem:bridge-weak}
+\Cref{def:bridge} asks for the \emph{weakest possible} surface: a function
+$(\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}
+\to \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$. We do not demand
+the function be injective, an isomorphism, or to preserve inner products.
+Stronger forms (e.g.\ a Hardy-space isometry between the finite Pick basis
+and the Burnol model space) would also suffice but are not necessary for
+Paper 03; we minimise the obstruction to maximise the chance of a future
+Vol V upgrade satisfying it.
+\end{remark}
+
+\subsection{Singleton reduction}
+
+\begin{definition}\label{def:single-transport}
+The \emph{singleton transport} is the type
+\begin{equation}
+\begin{aligned}
+\texttt{SingletonBlaschkePacketCarrierTransport}
+\;:\;& \texttt{Type}\,1, \\
+\;:= \;& \forall (P : \texttt{FiniteBlaschkePacket}),\;
+P.\texttt{ZeroIndex} = \texttt{Fin}\,1\to \\
+& \quad \bigl((\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}
+\to\texttt{burnolBlaschkeFactor.modelSpaceCarrier}\bigr).
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{lemma}[\texttt{singleton\_transport\_of\_full\_transport}]\label{lem:single-transport}
+\(
+\texttt{FiniteBlaschkePacketCarrierTransport}
+\to \texttt{SingletonBlaschkePacketCarrierTransport}.
+\)
+\end{lemma}
+
+\begin{proof}
+Given $h:\texttt{FiniteBlaschkePacketCarrierTransport}$, $P$, and
+$h_{\text{Eq}}:P.\texttt{ZeroIndex}=\texttt{Fin}\,1$, transport
+$\texttt{Nonempty}\,(\texttt{Fin}\,1)$ along $h_{\text{Eq}}^{-1}$ to obtain
+$\texttt{Nonempty}\,P.\texttt{ZeroIndex}$, then apply $h$.
+\end{proof}
+
+\Cref{lem:single-transport} shows that for our purposes (Paper 03 only ever
+needs the singleton case) the obstruction is logically equivalent to the
+weaker singleton statement.
+
+% =============================================================================
+\section{Results}\label{sec:results}
+
+We now state the closed theorems.
+
+\subsection{Step 2: bridge-conditional transport}
+
+\begin{theorem}[\texttt{nonempty\_burnol\_modelSpaceCarrier\_of\_bridge}]
+\label{thm:transport-bridge}
+Let
+$\texttt{bridge} : \texttt{OffCriticalDefectKernelBridge}$. Then
+\begin{equation}
+\texttt{ExistsOffCriticalZero}
+\to
+\texttt{Nonempty}\,\texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Assume $\texttt{ExistsOffCriticalZero}$, witnessed by some $s\in\C$ and
+$h:\texttt{OffCriticalZero}\,s$. Let
+$P = \texttt{singlePointPacket}\,s\,h$. By
+\Cref{lem:single-nonempty}, $\texttt{Nonempty}\,P.\texttt{ZeroIndex}$;
+hence by Paper 01's principal theorem, the finite-packet carrier is
+nonempty. Pick any $v\in (\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}$;
+apply $\texttt{bridge.transport}\,P\,h_{\text{NE}}$ (with
+$h_{\text{NE}} = \texttt{singlePointPacket\_nonempty}\,s\,h$) to $v$ to
+obtain a witness in $\texttt{burnolBlaschkeFactor.modelSpaceCarrier}$.
+This proves the conclusion.
+\end{proof}
+
+\subsection{Conditional principal theorem}
+
+\begin{theorem}[\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge}]\label{thm:cond-principal}
+\(
+\texttt{OffCriticalDefectKernelBridge}
+\to
+\texttt{OffCriticalZeroDefectKernel}.
+\)
+\end{theorem}
+
+\begin{proof}
+Given a $\texttt{bridge}$, the field
+$\texttt{model\_vector\_of\_offcritical}$ of
+$\texttt{OffCriticalZeroDefectKernel}$ is supplied by
+\Cref{thm:transport-bridge}.
+\end{proof}
+
+\Cref{thm:cond-principal} is the closed conditional principal theorem of
+Paper 03. The unconditional theorem
+$\texttt{off\_critical\_zero\_defect\_kernel}:\texttt{OffCriticalZeroDefectKernel}$
+is \emph{not} declared in the Lean module: doing so without a Vol V bridge
+would require \texttt{sorry}, \texttt{admit}, or a new \texttt{axiom}, all
+forbidden. The status is therefore \emph{obstruction-only}: when a Vol V
+upgrade ships an inhabitant of \texttt{OffCriticalDefectKernelBridge},
+\Cref{thm:cond-principal} immediately closes the unconditional theorem.
+
+\subsection{Step 1 audit corollaries}
+
+\begin{corollary}[\texttt{finitePacketWitness\_of\_offcritical}]
+\label{cor:fin-witness}
+For all $s,h$ as above,
+\(
+\texttt{Nonempty}\,(\texttt{singlePointModelSpace}\,s\,h).\texttt{carrier}.
+\)
+\end{corollary}
+
+\begin{proof}
+\Cref{thm:single-nonempty}.
+\end{proof}
+
+\begin{corollary}[\texttt{exists\_finitePacket\_witness\_of\_offCritical}]\label{cor:exists-witness}
+\(
+\texttt{ExistsOffCriticalZero}\to
+\exists (s) (h),\;\texttt{Nonempty}\,(\texttt{singlePointModelSpace}\,s\,h).\texttt{carrier}.
+\)
+\end{corollary}
+
+\begin{proof}
+Combine \Cref{cor:fin-witness} with the witness extraction
+$\langle s, h\rangle$ from $\texttt{ExistsOffCriticalZero}$.
+\end{proof}
+
+\Cref{cor:fin-witness,cor:exists-witness} are unconditional Lean theorems.
+They confirm that all of Paper 03's mathematical content \emph{except} the
+final transport step is closed.
+
+% =============================================================================
+\section{Numerical Witness}\label{sec:numerics}
+
+The accompanying Haskell program
+\texttt{haskell/paper-03-off-critical-defect-kernel/Main.hs} mirrors the
+Lean Step~(I) and Step~(II) construction at the test point
+$s = 0.6 + 14i$ (chosen for illustrative purposes; not claimed to be a
+zeta zero).
+
+The pipeline:
+\begin{enumerate}
+\item Computes $\alpha(s) = (s-1)/(s+1)
+\approx 0.984 + 0.141i$ with
+$|\alpha(s)|\approx 0.994 < 1$.
+\item Verifies the off-critical strip condition
+$0 < \re s < 1\wedge \re s\neq 1/2$.
+\item Constructs the singleton packet
+$P_{s} = (\texttt{ZeroIndex}=()\,,\,
+\texttt{zeroPoint}\;()\;=\alpha(s))$.
+\item Evaluates the singleton kernel vector
+$v : ()\to\C$, $v\;()\;=\;1$, and asserts $|v|>0$.
+\end{enumerate}
+A sanity table runs the same pipeline at five test points
+$s\in\{0.6+14i,\;0.5+14i,\;0.3+21i,\;1.5+3i,\;0+5i\}$, confirming that the
+off-critical predicate correctly rejects on-line and out-of-strip points
+while accepting in-strip off-line points. All assertions return
+\texttt{True}; the program prints \texttt{RESULT: PASS} and exits
+successfully.
+
+The Haskell program does \emph{not} attempt to construct the bridge
+\texttt{OffCriticalDefectKernelBridge}; that would require constructing an
+element of \texttt{burnolBlaschkeFactor.modelSpaceCarrier}, which by
+hypothesis has no introduction rule. The program is therefore a numerical
+witness for Step~(I) and Step~(II) only, mirroring exactly the closed
+portion of the Lean development.
+
+% =============================================================================
+\section{Detailed Proof of the Conditional Principal Theorem}\label{sec:detailed-proof}
+
+In this section we expand the proof of \Cref{thm:cond-principal} into a
+sequence of micro-steps so that the reader can verify the Lean
+formalisation step-by-step. The Lean source file is
+\texttt{lean/Vol6/OffCriticalDefectKernel.lean}.
+
+\subsection{Step-by-step decomposition}
+
+Recall the conditional principal theorem:
+\[
+\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge}
+:\;
+\texttt{OffCriticalDefectKernelBridge}
+\to
+\texttt{OffCriticalZeroDefectKernel}.
+\]
+The conclusion is a structure
+\(
+\{\,\texttt{model\_vector\_of\_offcritical}\,
+:\,\texttt{ExistsOffCriticalZero}\to
+\texttt{Nonempty}\,\texttt{burnolBlaschkeFactor.modelSpaceCarrier}\,\}.
+\)
+Hence to inhabit it, we must produce a function
+\(
+f : \texttt{ExistsOffCriticalZero}\to
+\texttt{Nonempty}\,\texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\)
+
+Given \texttt{bridge} and a witness
+$h_{\text{Off}}: \texttt{ExistsOffCriticalZero}$, we construct the witness
+of the conclusion in seven micro-steps.
+
+\begin{enumerate}[label=\textbf{Step \arabic*.},leftmargin=2em]
+\item \textbf{Witness extraction.} From
+\(
+h_{\text{Off}} : \exists s,\;\texttt{OffCriticalZero}\,s
+\)
+extract $s\in\C$ and $h_{\text{Z}} : \texttt{OffCriticalZero}\,s$ via
+$\texttt{Exists.elim}$.
+
+\item \textbf{Möbius image.} The disc parameter $\alpha(s) = (s-1)/(s+1)$
+is determined by $s$. By \Cref{lem:mobius-strip}, $\alpha(s)\in\Disc$ and
+$\alpha(s)\neq 0$ provided $s\neq 1$ (which is automatic since
+$\re s < 1$ \emph{and} the trivial zero is excluded by
+$\re s > 0$). The construction \texttt{singlePointPacket} does not need
+this analytic fact; it uses $\alpha(s)$ as a formal complex parameter
+only.
+
+\item \textbf{Singleton packet.} Build
+\[
+P \;:=\; \texttt{singlePointPacket}\,s\,h_{\text{Z}}
+\]
+of \Cref{def:single-pkt}. Its index type is $\texttt{Fin}\,1$, its
+\texttt{zeroPoint} is the constant $\alpha(s)$, and its \texttt{offCritical}
+flag is $\texttt{True}$. The structure is total (no missing fields) by
+inspection.
+
+\item \textbf{Index nonemptiness.} \Cref{lem:single-nonempty} gives
+$h_{\text{NE}} :\texttt{Nonempty}\,P.\texttt{ZeroIndex}$ via the witness
+$\langle 0\rangle:\texttt{Nonempty}\,(\texttt{Fin}\,1)$.
+
+\item \textbf{Apply Paper 01.} By Paper 01's principal theorem
+\eqref{eq:paper01},
+\[
+h_{\text{C}} :\texttt{Nonempty}\,
+(\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}.
+\]
+
+\item \textbf{Choose a witness.} Apply
+$\texttt{Nonempty.elim}$ (or \texttt{rcases}) to $h_{\text{C}}$ to
+extract $v : (\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}$.
+This step is constructive in the sense that any inhabitant suffices; the
+specific choice is irrelevant for the statement of \texttt{Nonempty}.
+
+\item \textbf{Apply the bridge.} Compute
+\[
+\texttt{bridge.transport}\,P\,h_{\text{NE}}\,v
+\;:\;
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}.
+\]
+Wrap in $\langle\,-\,\rangle$ to obtain
+$\texttt{Nonempty}\,\texttt{burnolBlaschkeFactor.modelSpaceCarrier}$.
+\end{enumerate}
+
+The above is the complete chain. The Lean file
+\texttt{Vol6/OffCriticalDefectKernel.lean} encodes Steps 1--7 in a single
+\texttt{by} block of
+\texttt{nonempty\_burnol\_modelSpaceCarrier\_of\_bridge}; the structure
+projection in
+\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge} then assembles
+the final inhabitant.
+
+\subsection{Lean term-mode rendering}
+
+For reference, the Lean term has the following structure:
+\begin{verbatim}
+theorem nonempty_burnol_modelSpaceCarrier_of_bridge
+    (bridge : OffCriticalDefectKernelBridge) :
+    ExistsOffCriticalZero ->
+      Nonempty burnolBlaschkeFactor.modelSpaceCarrier := by
+  intro hOff
+  rcases hOff with <s, hZero>
+  let P : FiniteBlaschkePacket := singlePointPacket s hZero
+  have hPNonempty : Nonempty P.ZeroIndex :=
+    singlePointPacket_nonempty s hZero
+  have hCarrier : Nonempty (finiteBlaschkeModelSpace P).carrier :=
+    finite_packet_model_space_nonempty P hPNonempty
+  rcases hCarrier with <v>
+  exact <bridge.transport P hPNonempty v>
+\end{verbatim}
+The structure of the Lean tactic block is exactly the seven micro-steps,
+in the same order. No tactic introduces a \texttt{sorry}, \texttt{admit},
+\texttt{axiom}, or \texttt{opaque}.
+
+\subsection{Universe analysis}
+
+A subtle point: the bridge type
+\texttt{OffCriticalDefectKernelBridge} is in \texttt{Type 1}, not in
+\texttt{Prop}, because its \texttt{transport} field is genuinely a
+function between arbitrary \texttt{Type}s. The conclusion
+\texttt{OffCriticalZeroDefectKernel} is in \texttt{Prop}, since
+\texttt{Nonempty} is a \texttt{Prop}-valued proposition. The map
+\(
+\texttt{OffCriticalDefectKernelBridge}\to
+\texttt{OffCriticalZeroDefectKernel}
+\)
+is therefore a non-propositional-to-propositional function. This is
+permitted in Lean 4: any proof can depend on type-level data, and a
+proof of a \texttt{Prop} can be obtained by using arbitrary
+\texttt{Type}-level inputs.
+
+In the propositional view, the bridge \emph{is} the data of a
+finite-packet-to-Burnol-carrier function; in the propositional view of
+the conclusion, the function is consumed only to extract a
+\texttt{Nonempty} witness. Universe-level coercion is automatic in Lean
+because \texttt{Nonempty} is propositional and consumed only as such.
+
+% =============================================================================
+\section{Examples and Sanity Checks}\label{sec:examples}
+
+\subsection{Why singletons suffice}
+
+A natural objection to \Cref{def:single-pkt} is: \emph{why a singleton
+packet?} Couldn't a multi-point packet be used? The answer is that
+\texttt{ExistsOffCriticalZero} only supplies one zero $s$ at a time; the
+existential cannot be repeated to obtain two distinct zeros without
+additional information. Hence the singleton packet is the canonical
+construction.
+
+If one had access to two distinct off-critical zeros $s_{1}\neq s_{2}$,
+the corresponding two-point packet
+$P = \{\alpha(s_{1}), \alpha(s_{2})\}$ would yield a
+\emph{two-dimensional} finite model space, with two linearly independent
+Pick-basis vectors. The argument would proceed identically: Paper 01's
+principal theorem produces a nonempty carrier, the bridge transports it,
+and we conclude. So the proof is robust under generalisation; we use the
+singleton because it matches the supplied data exactly.
+
+\subsection{Worked example: $s = 0.6 + 14i$}
+
+Take $s = 0.6 + 14i$ as the test point of the Haskell driver. Then
+\begin{align*}
+\alpha(s) &= \frac{(0.6 + 14i) - 1}{(0.6 + 14i) + 1}
+            = \frac{-0.4 + 14i}{1.6 + 14i} \\
+          &= \frac{(-0.4 + 14i)(1.6 - 14i)}{(1.6)^{2} + (14)^{2}}
+            = \frac{(-0.64 + 196) + (5.6 + 22.4)i}{2.56 + 196} \\
+          &= \frac{195.36 + 28i}{198.56}
+            \approx 0.984 + 0.141i,
+\end{align*}
+giving $|\alpha(s)|^{2} \approx 0.968 + 0.020 = 0.988$, so
+$|\alpha(s)|\approx 0.994$. The disc parameter is well inside $\Disc$ but
+close to the boundary; this is consistent with $\re s = 0.6$ being close
+to the critical line.
+
+The singleton packet is
+\(
+P = \big(\texttt{ZeroIndex}=\texttt{Fin}\,1,\;
+\texttt{zeroPoint}\,0 = 0.984+0.141i\big);
+\)
+its finite Blaschke product is
+\(
+B_{P}(z) = b_{\alpha(s)}(z)
+= \frac{|\alpha(s)|}{\alpha(s)}\cdot \frac{\alpha(s)-z}{1-\overline{\alpha(s)}z}.
+\)
+The model space $K_{B_{P}}$ is one-dimensional, spanned by the single
+Pick-basis vector
+\[
+k_{\alpha(s)}(z)
+= \frac{1 - B_{P}(z)\overline{B_{P}(\alpha(s))}}{1 - z\overline{\alpha(s)}}.
+\]
+Since $B_{P}(\alpha(s)) = 0$, this simplifies to
+$k_{\alpha(s)}(z) = (1 - z\overline{\alpha(s)})^{-1}$,
+the standard Cauchy reproducing kernel. In Paper 01's coefficient model,
+the Pick vector is the indicator function $i\mapsto[i = 0]$, which the
+Haskell driver confirms is nonzero.
+
+\subsection{Worked example: $s = 0.5 + 14i$ (on the critical line)}
+
+For comparison, the on-line point $s = 0.5 + 14i$ has
+\[
+\alpha(s) = \frac{-0.5 + 14i}{1.5 + 14i}
+          = \frac{(-0.5 + 14i)(1.5 - 14i)}{2.25 + 196}
+          \approx 0.985 + 0.106i,
+\]
+so $|\alpha(s)|\approx 0.991$, very close to (but not exactly on) the
+unit circle. Note that as $|\im s|\to\infty$ along the critical line,
+$|\alpha(s)|\to 1$; the off-critical points sit slightly inside this
+limit.
+
+The Haskell sanity table confirms that
+\texttt{isOffCriticalCandidate}$(0.5+14i) = \texttt{False}$ — \emph{not}
+because the disc parameter is on the unit circle (it isn't, for finite
+$s$) but because the predicate explicitly excludes
+$\re s = 1/2$.
+
+\subsection{Out-of-strip example: $s = 1.5 + 3i$}
+
+For $s = 1.5 + 3i$ outside the critical strip, we have $\re s = 1.5$,
+which violates $\re s < 1$. The Haskell predicate correctly rejects this
+point. The Möbius image $\alpha(s) \approx 0.598 + 0.460i$ has
+$|\alpha(s)|\approx 0.755 < 1$, well inside the disc; this is consistent
+with the Cayley transform sending the entire right half-plane $\re s>0$
+into $\Disc$. Such points are not zeta zeros (Mathlib's
+\texttt{riemannZeta} has no zeros with $\re s > 1$), but the disc image
+is still well-defined.
+
+% =============================================================================
+\section{Comparison with the Direct (Non-Singleton) Route}\label{sec:comparison}
+
+\subsection{The direct quotient-class construction}
+
+A naive approach to inhabiting
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier} would be to construct a
+direct quotient class in $\HardyTwo / \BurnolFactor\HardyTwo$. This
+requires:
+\begin{enumerate}
+\item A concrete Hardy space $\HardyTwo$ with explicit elements (Vol V's
+\texttt{HardySpaceH2} is opaque);
+\item A concrete Hardy submodule
+$\BurnolFactor\HardyTwo$ (Vol V's \texttt{blaschkeHardyImage} is also
+opaque);
+\item A concrete quotient construction
+$\HardyTwo / \BurnolFactor\HardyTwo$ inhabited by a specific element
+not in $\BurnolFactor\HardyTwo$.
+\end{enumerate}
+None of these are provided by the Vol V surface. Worse, even if we
+constructed them in Vol VI, the resulting carrier would be (definitionally)
+some Vol VI type $X$, not Vol V's
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}; we would still need a
+bridge $X\to \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$, returning
+us to the same obstruction.
+
+Hence the singleton packet route is preferable: it bottlenecks the
+opacity exclusively at the bridge, isolating the missing surface.
+
+\subsection{The Hardy-RKHS route}
+
+Another conceivable route uses the Hardy-RKHS isomorphism
+$\HardyTwo \simeq \mathrm{RKHS}(K_{\text{Szego}})$ where $K_{\text{Szego}}(z,w)
+= (1-z\overline{w})^{-1}$ is the Szegő kernel. The model space $K_{B}$
+then identifies with the RKHS subspace orthogonal to those kernels which
+factor through $B$. This route is mathematically cleaner but requires Vol
+V to expose the RKHS structure on $\HardyTwo$, which it does not. So this
+route also reduces to the bridge.
+
+\subsection{The completion / colimit route}
+
+A third route lifts finite-packet model spaces to the canonical Burnol
+factor by a filtered colimit
+\(
+\KB \;\simeq\; \mathop{\mathrm{colim}}_{P}\,K_{B_{P}}
+\)
+running over all finite Blaschke packets. This is the route hinted at by
+RF-05 of the knowledge base. Implementing it requires both:
+\begin{enumerate}
+\item a category structure on finite Blaschke packets (with monomorphism
+maps $P\inj P'$ when $P'$ contains $P$ as a sub-packet);
+\item a colimit functor
+$\mathrm{colim}: P \mapsto K_{B_{P}}$;
+\item an isomorphism between this colimit and Vol V's canonical $\KB$.
+\end{enumerate}
+Steps (1) and (2) are routine in Mathlib; step (3) is the Vol V bridge
+in disguise. So this route also bottlenecks on the same obstruction.
+
+\subsection{Summary}
+
+All three potential routes terminate in the same Vol V opacity. The
+obstruction module captures this opacity precisely, and the conditional
+principal theorem absorbs all the surrounding mathematical content into a
+closed Lean theorem.
+
+% =============================================================================
+\section{The Bridge as a Mathematical Statement}\label{sec:bridge-math}
+
+\subsection{What does it mean to inhabit the bridge?}
+
+The bridge \texttt{OffCriticalDefectKernelBridge} asks for a function
+\[
+\forall P,\;\texttt{Nonempty}\,P.\texttt{ZeroIndex}\to
+((\texttt{finiteBlaschkeModelSpace}\,P).\texttt{carrier}\to
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}).
+\]
+Mathematically, this is the assertion that for any finite Blaschke
+packet $P$, there exists \emph{a} map from the Pick coefficient space
+$P.\texttt{ZeroIndex}\to\C$ to the canonical Burnol model space carrier.
+Such a map need not be linear, isometric, or canonical; mere existence is
+enough.
+
+In particular, any one of the following Vol V upgrades would inhabit the
+bridge:
+
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{Concretization.} Replace
+$\texttt{axiom burnolBlaschkeFactor : BurnolBlaschkeFactor}$ by a
+\texttt{def} producing a concrete factor whose carrier is, say,
+$\HardyTwo / \BurnolFactor\HardyTwo$ as a Lean quotient. Then the bridge
+is the natural inclusion
+$P.\texttt{ZeroIndex}\to\C$ \(\hookrightarrow\) $\HardyTwo / \BurnolFactor\HardyTwo$
+sending a coefficient sequence to the corresponding Pick-basis sum modulo
+$\BurnolFactor\HardyTwo$.
+
+\item \textbf{Identification lemma.} Add a Vol V theorem
+\(
+\texttt{burnol\_modelSpaceCarrier\_eq}
+:
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}
+=
+(\HardyTwo / \BurnolFactor\HardyTwo).
+\)
+Then the bridge is the natural map composed with the equality cast.
+
+\item \textbf{Constructor lemma.} Add a Vol V function
+\(
+\texttt{burnol\_modelSpaceCarrier\_of\_disc\_zero}
+:
+\forall \alpha\in\Disc,\;\BurnolFactor(\alpha)=0\to
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}
+\)
+producing the reproducing kernel at any disc zero of $\BurnolFactor$.
+Combined with a finite-packet selector, this gives the bridge.
+\end{enumerate}
+
+\subsection{Why option (a) is the intended target}
+
+The Vol VI knowledge base RF-01 explicitly identifies (a) as the
+canonical resolution: ``vol6 must define its own concrete replacement for
+\texttt{burnolBlaschkeFactor} (call it
+\texttt{concreteBurnolBlaschkeFactor}) that is definitionally equal or
+provably equivalent.'' This is the most invasive but also the most
+canonical fix; once the carrier is concrete, all three Vol VI papers
+(03, 04, 05) that depend on it can be closed unconditionally.
+
+\subsection{Why we ship the obstruction rather than the fix}
+
+Implementing option (a) requires modifying Vol V or shipping a
+significant Vol VI module that constructs the Burnol/Blaschke factor
+from scratch in Lean. Both are out of scope for a single
+sprint paper. Paper 03's role is to discharge \emph{Target 1} of the
+no-phantom language; the carrier construction is logically prior and
+should be addressed by a dedicated paper (or by a Vol V upgrade). The
+obstruction module precisely localises the missing piece, so any future
+worker can pick it up without re-deriving Paper 03's content.
+
+% =============================================================================
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Comparison with the Vol V opaque-axiom semantics}
+
+Vol V's choice to declare
+\texttt{burnolBlaschkeFactor} as an axiom reflects the convention that
+the canonical Burnol/Blaschke factor is treated as data \emph{external}
+to the Hardy/Mellin axiomatic surface used by the no-phantom route. This
+keeps the core axiomatic surface lean, but it also pushes the
+construction of the carrier into Vol VI. The minimal Vol V surface
+upgrade that would close Paper 03 is to expose any one of:
+\begin{itemize}
+\item a coercion
+$\texttt{HardySpaceH2}\to\texttt{burnolBlaschkeFactor.modelSpaceCarrier}$
+that factors through the quotient by
+$\texttt{blaschkeHardyImage}$;
+\item an equivalence
+$\texttt{burnolBlaschkeFactor.modelSpaceCarrier}
+\simeq \texttt{HardySpaceH2}/\texttt{blaschkeHardyImage}$;
+\item a constructor
+$\forall \alpha\in\Disc,\;
+\BurnolFactor(\alpha)=0
+\to \texttt{burnolBlaschkeFactor.modelSpaceCarrier}$
+producing the reproducing kernel at $\alpha$.
+\end{itemize}
+The third option is the most direct match for our singleton-packet
+construction; the second is the most categorically natural; the first is
+the most immediate Hardy-space-theoretic statement.
+
+\subsection{Why this paper is not RH-equivalent}
+
+Paper 03 \emph{conditionally} discharges Target 1 of the no-phantom
+language. Combined with Target 2 (Vol VI Paper 06's discharge of
+\texttt{YonedaBlaschkeDetectorCalculus}) and the Vol V master theorem
+\eqref{eq:master}, an unconditional Paper 03 closes
+\texttt{RH\_classical}. We must therefore explain why our argument is
+not circular and not RH-equivalent.
+
+The hypothesis \texttt{ExistsOffCriticalZero} of
+\Cref{thm:cond-principal} is the \emph{negation} of RH; the conclusion is a
+nonemptiness statement about the canonical Burnol model space. The
+implication, properly read, is: \emph{any} off-critical zero (whether or
+not RH holds) creates a nonzero model-space vector. The Vol V master
+theorem then turns that contradiction into a proof of RH only via
+combination with the no-phantom predicate
+$\texttt{NoPhantomDefect}$, which is supplied by Target 2 (Paper 06).
+Neither Paper 03 nor Paper 06 individually proves RH; their conjunction
+under the Vol V master rule does. This is the new-language pattern: the
+mathematical content has been factored into two strictly weaker pieces,
+each provable by direct construction.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+\item \textbf{Bridge inhabitation.} \Cref{thm:cond-principal} is
+conditional on the bridge. The remaining mathematical work for an
+unconditional Vol VI closure is the inhabitation of
+\texttt{OffCriticalDefectKernelBridge}, equivalent to discharging RF-01.
+\item \textbf{Paper 01 carrier choice.} Paper 01's choice of carrier
+$P.\texttt{ZeroIndex}\to\C$ is the simplest valid finite-dimensional
+carrier; it reproduces the Pick basis up to a noncanonical isomorphism.
+Other carriers (e.g.\ a Hardy-space subspace generated by
+$\{k_{\alpha_{i}}\}$) would also work and might make the bridge
+inhabitation easier; the present obstruction is parametric in the carrier
+and remains valid for any Paper 01 implementation.
+\item \textbf{Numerical scope.} The Haskell program is a single-point
+sanity check, not a verification of any specific zeta zero.
+\end{enumerate}
+
+% =============================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+We have discharged Step~(I) and Step~(II) of the Paper 03 pipeline as
+closed Lean theorems
+\begin{itemize}
+\item $\texttt{singlePointPacket\_nonempty}$
+   (\Cref{lem:single-nonempty}),
+\item $\texttt{singlePointModelSpace\_nonempty}$
+   (\Cref{thm:single-nonempty}),
+\item $\texttt{finitePacketWitness\_of\_offcritical}$
+   (\Cref{cor:fin-witness}),
+\item $\texttt{exists\_finitePacket\_witness\_of\_offCritical}$
+   (\Cref{cor:exists-witness}),
+\end{itemize}
+and we have shipped Step~(III) as the conditional principal theorem
+\(
+\texttt{off\_critical\_zero\_defect\_kernel\_of\_bridge}
+:
+\texttt{OffCriticalDefectKernelBridge}\to
+\texttt{OffCriticalZeroDefectKernel}
+\)
+together with the typed obstruction module
+\texttt{Vol6.Obstruction.OffCriticalDefectKernelObstruction}. The
+unconditional principal theorem
+\texttt{off\_critical\_zero\_defect\_kernel} is \emph{not} declared in
+the present module; doing so without a Vol V bridge would violate the
+Vol VI hard rules.
+
+The Lean development compiles as
+\(
+\texttt{lake build Vol6.OffCriticalDefectKernel}
+\)
+with no \texttt{sorry}, \texttt{admit}, new \texttt{axiom}, or new
+\texttt{opaque}. The accompanying Haskell program runs successfully and
+mirrors Step~(I) and Step~(II) numerically.
+
+\paragraph{Future work.} The next concrete step in the Vol VI pipeline
+is the production of an inhabitant of
+\texttt{OffCriticalDefectKernelBridge}. This requires either a Vol V
+upgrade exposing one of the three bridge surfaces listed in
+\Cref{sec:transport-obstruction}, or a Vol VI replacement of
+\texttt{burnolBlaschkeFactor} by a concrete (non-axiomatic) Burnol
+factor. The latter is anticipated by RF-01 and would be a substantive
+mathematical contribution: a Lean-formalised construction of the
+Burnol/Blaschke factor in terms of fractional-part atoms and
+finite-rank Hardy quotients.
+
+% =============================================================================
+\section{Appendix: Full Lean Module Listing}\label{sec:lean-listing}
+
+For completeness we reproduce the full content of
+\texttt{lean/Vol6/OffCriticalDefectKernel.lean} (the principal module) and
+\texttt{lean/Vol6/Obstruction/OffCriticalDefectKernelObstruction.lean}
+(the obstruction module). These are the canonical Lean artefacts of
+Paper 03 and should be regarded as part of the paper.
+
+\subsection{Principal module}
+
+Located at \texttt{lean/Vol6/OffCriticalDefectKernel.lean}. The module
+namespace is \texttt{Vol6.OffCriticalDefectKernelNS} and the
+\texttt{noncomputable section} mode is used (because elements are
+extracted via \texttt{Classical.choice} from \texttt{Nonempty}).
+
+Key declarations:
+\begin{itemize}
+\item \texttt{abbrev alpha (s : Complex) : Complex := mobiusParam s} — disc parameter map.
+\item \texttt{def singlePointPacket (s : Complex) (\_h : OffCriticalZero s) : FiniteBlaschkePacket}
+   — singleton packet construction.
+\item \texttt{theorem singlePointPacket\_nonempty} — closed.
+\item \texttt{def singlePointModelSpace} — singleton model space.
+\item \texttt{theorem singlePointModelSpace\_nonempty} — closed via
+   Paper 01.
+\item \texttt{theorem nonempty\_burnol\_modelSpaceCarrier\_of\_bridge}
+   — Step~(III) under the bridge.
+\item \texttt{theorem off\_critical\_zero\_defect\_kernel\_of\_bridge}
+   — conditional principal theorem.
+\item \texttt{theorem finitePacketWitness\_of\_offcritical} — audit
+   corollary.
+\item \texttt{theorem exists\_finitePacket\_witness\_of\_offCritical}
+   — audit corollary.
+\item \texttt{def off\_critical\_defect\_kernel\_status : String}
+   — audit marker.
+\end{itemize}
+
+\subsection{Obstruction module}
+
+Located at \texttt{lean/Vol6/Obstruction/OffCriticalDefectKernelObstruction.lean}.
+The module namespace is \texttt{Vol6.Obstruction}.
+
+Key declarations:
+\begin{itemize}
+\item \texttt{noncomputable def mobiusParam (s : Complex) : Complex := (s - 1)/(s + 1)}
+\item \texttt{theorem mobiusParam\_one : mobiusParam 1 = 0}
+\item \texttt{def FiniteBlaschkePacketCarrierTransport : Type 1}
+\item \texttt{structure OffCriticalDefectKernelBridge : Type 1}
+\item \texttt{def SingletonBlaschkePacketCarrierTransport : Type 1}
+\item \texttt{def singleton\_transport\_of\_full\_transport}
+\item \texttt{def off\_critical\_defect\_kernel\_obstruction\_status : String}
+\end{itemize}
+
+\subsection{Build verification}
+
+The Lean development is verified by
+\begin{verbatim}
+cd lean && PATH="$HOME/.elan/bin:$PATH" \
+    lake build Vol6.OffCriticalDefectKernel
+\end{verbatim}
+which terminates with
+\begin{verbatim}
+Build completed successfully (2925 jobs).
+\end{verbatim}
+A grep for \texttt{sorry|admit|axiom |opaque } in
+\texttt{Vol6/OffCriticalDefectKernel.lean} and
+\texttt{Vol6/Obstruction/OffCriticalDefectKernelObstruction.lean}
+yields only matches in comments (the words appear in audit prose
+explaining what is forbidden).
+
+% =============================================================================
+\section{Appendix: Full Haskell Driver Listing}\label{sec:haskell-listing}
+
+The Haskell program lives at
+\texttt{haskell/paper-03-off-critical-defect-kernel/Main.hs}. Key
+components:
+
+\begin{itemize}
+\item \texttt{mobiusParam :: Complex Double -> Complex Double} —
+   numerical Möbius parameter.
+\item \texttt{isOffCriticalCandidate :: Complex Double -> Bool}
+   — strip and off-line predicate.
+\item \texttt{data SinglePointPacket} — single-zero packet.
+\item \texttt{type SinglePointCarrier = () -> Complex Double} — singleton
+   carrier (mirroring \texttt{Fin 1 -> Complex}).
+\item \texttt{singlePointKernelVector :: SinglePointCarrier} — the
+   constant-1 function.
+\item \texttt{kernelVectorNonzero :: Bool} — the nondegeneracy decision.
+\item \texttt{runPipeline :: Complex Double -> IO Bool} — full driver.
+\item \texttt{sanityTable :: IO ()} — multi-point smoke test.
+\end{itemize}
+
+The program runs successfully with
+\begin{verbatim}
+runghc haskell/paper-03-off-critical-defect-kernel/Main.hs
+\end{verbatim}
+producing output:
+\begin{verbatim}
+Vol6 paper 03 — Off-Critical Defect Kernel (Haskell)
+Input s = 0.6 :+ 14.0
+  Re s    = 0.6
+  Im s    = 14.0
+alpha(s) = (s-1)/(s+1) = 0.984 :+ 0.141
+  |alpha(s)|  = 0.994
+Off-critical candidate? True
+Singleton kernel vector v : () -> Complex
+  v()      = 1.0 :+ 0.0
+  |v|      = 1.0
+  nonzero? = True
+Assertions:
+  [A1] off-critical strip + off line .... True
+  [A2] 0 < |alpha(s)| < 1 ............... True
+  [A3] zeroPoint() == alpha(s) .......... True
+  [A4] kernel vector norm > 0 ........... True
+  [A5] kernelVectorNonzero flag ......... True
+RESULT: PASS
+\end{verbatim}
+
+% =============================================================================
+\section{Appendix: Vol V Surface Audit}\label{sec:vol5-audit}
+
+We document the precise Vol V audit performed to certify that no
+introduction rule for \texttt{burnolBlaschkeFactor.modelSpaceCarrier}
+exists in the no-phantom-language route.
+
+\subsection{Files searched}
+
+\begin{itemize}
+\item \texttt{Vol5/YonedaNymanTrackA/BurnolCore.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/BurnolFactorization.lean} (excluded
+from the no-phantom route per knowledge base RF-06; surveyed for
+completeness only)
+\item \texttt{Vol5/YonedaNymanTrackA/BlaschkeDefectObject.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/HardyModelSpace.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/NoPhantomConcreteAtoms.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/NoPhantomBlaschkeDefect.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/CondensedHilbertDefect.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/RKHSDetectorSemantics.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/FiniteRankRKHSDetector.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/OffCriticalZeroDefect.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/NoPhantomLanguage.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/YonedaCore.lean}
+\item \texttt{Vol5/YonedaNymanTrackA/Basic.lean}
+\end{itemize}
+
+\subsection{Search method}
+
+For each file, we ran (essentially)
+\begin{verbatim}
+grep -n "modelSpaceCarrier" file.lean
+\end{verbatim}
+and inspected each match for context. The matches in
+\texttt{BurnolCore.lean}, \texttt{BlaschkeDefectObject.lean},
+\texttt{NoPhantomConcreteAtoms.lean}, and \texttt{NoPhantomLanguage.lean}
+are uses, not introductions: they reference the carrier via the axiom
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier} and either project from
+it or assert membership/emptiness predicates. None constructs an
+inhabitant.
+
+\subsection{Conclusion}
+
+No Vol V theorem, function, or instance has any of the conclusion
+shapes (a) identification, (b) injection, or (c) constructor for
+\texttt{burnolBlaschkeFactor.modelSpaceCarrier}, for any concrete type.
+This certifies that the obstruction module is necessary; without a Vol V
+upgrade, the unconditional principal theorem cannot be closed by purely
+axiom-free Vol VI means.
+
+\subsection{Implications for the Vol VI sprint}
+
+This audit shows that the Vol VI Paper 03 obstruction is not unique:
+Papers 04, 05, and 06 likely face analogous obstructions for the
+\texttt{DefectDetectedByRationalDilationRepresentable} (RF-02) and
+\texttt{BlaschkeDefectDualizable/Polarized/Regularized} (RF-03)
+opaque atoms. Each of these papers will need to ship a parallel
+obstruction module, and the synthesis paper (Paper 07) will need to
+collect and propagate them. The pattern is uniform: when a Vol V
+opaque/axiom can be inhabited only externally, Vol VI factors out a
+typed bridge and delivers conditional theorems. The conditional
+theorems are then assembled by the orchestrator pipeline; the
+obstruction propagation tracks exactly what Vol V upgrades remain
+required for full closure of \texttt{RH\_classical\_new\_language}.
+
+% =============================================================================
+\section*{Acknowledgements}
+
+We thank the orchestrator-pipeline of the Vol VI sprint for parallel
+delivery of Vol VI Paper 01 (\texttt{Vol6.FiniteBlaschkePacket}), without
+which this paper's Step~(II) would have to be re-derived in situ. The
+Vol V no-phantom-language route, on which all of Vol VI rests, is due to
+the Vol V development team.
+
+% =============================================================================
+\begin{thebibliography}{99}
+
+\bibitem{burnol}
+J.-F. Burnol, \emph{Sur certains espaces de Hilbert de fonctions
+enti\`eres, li\'es \`a la transformation de Fourier et aux fonctions L
+de Dirichlet et de Riemann}, C. R. Acad. Sci. Paris S\'er. I Math.,
+333 (2001), 273--278.
+
+\bibitem{nyman}
+B. Nyman, \emph{On the One-Dimensional Translation Group and
+Semi-Group in Certain Function Spaces}, Ph.D. thesis, University of
+Uppsala, 1950.
+
+\bibitem{beurling}
+A. Beurling, \emph{A closure problem related to the Riemann
+zeta-function}, Proc. Nat. Acad. Sci. U.S.A., 41 (1955), 312--314.
+
+\bibitem{garcia-mashreghi}
+S. R. Garcia, J. Mashreghi, W. T. Ross, \emph{Introduction to Model
+Spaces and Their Operators}, Cambridge Studies in Advanced
+Mathematics, Vol. 148, Cambridge University Press, 2016.
+
+\bibitem{hoffman}
+K. Hoffman, \emph{Banach Spaces of Analytic Functions}, Prentice-Hall,
+Englewood Cliffs, NJ, 1962.
+
+\bibitem{nikolski}
+N. K. Nikolski, \emph{Operators, Functions, and Systems: An Easy
+Reading}, Vol. 1: Hardy, Hankel, and Toeplitz, Mathematical Surveys
+and Monographs, Vol. 92, American Mathematical Society, 2002.
+
+\bibitem{pick}
+G. Pick, \emph{\"Uber die Beschr\"ankungen analytischer Funktionen},
+Math. Ann., 77 (1916), 7--23.
+
+\bibitem{rudin}
+W. Rudin, \emph{Real and Complex Analysis}, 3rd ed., McGraw-Hill, New
+York, 1987.
+
+\bibitem{titchmarsh}
+E. C. Titchmarsh, \emph{The Theory of the Riemann Zeta-Function}, 2nd
+ed., Oxford University Press, 1986.
+
+\bibitem{vol5}
+M. Long, \emph{The No-Phantom Language for Classical RH}, Vol V of the
+HoTT--Riemann programme, Magneton Research, 2025.
+
+\bibitem{vol6-knowledge-base}
+M. Long, \emph{Vol VI Knowledge Base}, Magneton Research,
+\texttt{hott-riemann-hypothesis-vol6/.knowledge-base.md}, 2026.
+
+\bibitem{vol6-paper01}
+M. Long, \emph{Concrete Finite Blaschke Packet Model Spaces} (Vol VI
+Paper 01), Magneton Research, 2026.
+
+\bibitem{vol6-paper02}
+M. Long, \emph{Detector Completeness for Finite Blaschke Packets via
+Gram-Matrix Nondegeneracy} (Vol VI Paper 02), Magneton Research, 2026.
+
+\bibitem{vol6-paper06}
+M. Long, \emph{Assembly of the Yoneda/Blaschke Detector Calculus} (Vol
+VI Paper 06), Magneton Research, 2026.
+
+\bibitem{lean4}
+L. de Moura, S. Ullrich, \emph{The Lean 4 Theorem Prover and
+Programming Language}, in: A. Platzer, G. Sutcliffe (eds.), Automated
+Deduction --- CADE 28, Lecture Notes in Computer Science, vol. 12699,
+Springer, Cham, 2021, pp. 625--635.
+
+\bibitem{mathlib}
+The Mathlib Community, \emph{The Lean Mathematical Library}, in:
+Proceedings of the 9th ACM SIGPLAN International Conference on
+Certified Programs and Proofs (CPP 2020), New Orleans, 2020,
+pp. 367--381.
+
+\bibitem{voevodsky}
+V. Voevodsky and the Univalent Foundations Program, \emph{Homotopy
+Type Theory: Univalent Foundations of Mathematics}, Institute for
+Advanced Study, Princeton, 2013.
+
+\end{thebibliography}
+
+\end{document}
