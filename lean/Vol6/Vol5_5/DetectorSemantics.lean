@@ -1,9 +1,11 @@
 import Vol5.YonedaNymanTrackA.RKHSDetectorSemantics
+import Vol6.Obstruction.RationalDilationExternalizationObstruction
 
 namespace Vol6
 namespace Vol5_5
 
 open Vol5.YonedaNymanTrackA
+open Vol6.Obstruction
 
 noncomputable section
 
@@ -34,6 +36,24 @@ structure TransparentDetectorRelation
       Detects v d ->
         CondensedHilbertDefectDetectedByRationalDilation K
           (yoneda (R.objectOf (parameterOf d)))
+
+/--
+The transparent relation supplies the exact Vol6 detector-indexed
+externalization introduction rule.  This keeps the Vol5.5 adapter aligned with
+the existing Vol6 obstruction API instead of creating a drifting parallel
+interface.
+-/
+def externalizationIntroductionRule_of_transparentDetectorRelation
+    {K : CondensedHilbertDefect}
+    {S : RKHSModelSpaceDetector K}
+    {R : RationalDilationObjectSemantics}
+    (H : TransparentDetectorRelation K S R) :
+    ExternalizationIntroductionRule K S R where
+  parameterOf := H.parameterOf
+  detected_of_detector := by
+    intro _ _ hDetector
+    exact H.vol5_detected_of_detects
+      (H.detects_of_model_detector hDetector)
 
 /--
 The transparent detector relation supplies the externalization structure used

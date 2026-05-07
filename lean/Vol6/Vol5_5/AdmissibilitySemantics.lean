@@ -1,4 +1,5 @@
 import Vol5.YonedaNymanTrackA.CondensedHilbertDefect
+import Vol6.Obstruction.AdmissibilityObstruction
 
 namespace Vol6
 namespace Vol5_5
@@ -44,6 +45,22 @@ theorem blaschkeDefectAdmissible_of_transparentAdmissibilityData
   polarized := A.polarized_of_certificate A.polarizedCertificate
   regularized := A.regularized_of_certificate A.regularizedCertificate
 
+/--
+Transparent admissibility data supplies the exact Vol6 admissibility
+introduction package.  The maps into Vol5's three predicates remain the real
+proof obligations.
+-/
+theorem admissibilityIntroduction_of_transparentAdmissibilityData
+    {K : BlaschkeDefectObject}
+    (A : TransparentAdmissibilityData K) :
+    Vol6.Obstruction.AdmissibilityIntroduction K where
+  dualizable_of_finite_rank :=
+    A.dualizable_of_certificate A.dualizableCertificate
+  polarized_of_finite_rank :=
+    A.polarized_of_certificate A.polarizedCertificate
+  regularized_of_finite_rank :=
+    A.regularized_of_certificate A.regularizedCertificate
+
 /-- Transparent admissibility data supplies condensed Hilbert admissibility. -/
 theorem admissibleCondensedHilbertDefect_of_transparentAdmissibilityData
     {K : CondensedHilbertDefect}
@@ -61,6 +78,12 @@ theorem burnolBlaschkeDefectIsAdmissible_of_transparentAdmissibilityData
     (A : BurnolBlaschkeTransparentAdmissibilityData) :
     BurnolBlaschkeDefectIsAdmissible :=
   admissibleCondensedHilbertDefect_of_transparentAdmissibilityData A
+
+/-- Canonical transparent data supplies Vol6's canonical introduction package. -/
+theorem canonicalAdmissibilityIntroduction_of_transparentAdmissibilityData
+    (A : BurnolBlaschkeTransparentAdmissibilityData) :
+    Vol6.Obstruction.CanonicalAdmissibilityIntroduction :=
+  admissibilityIntroduction_of_transparentAdmissibilityData A
 
 /-- Audit marker for the transparent admissibility layer. -/
 def transparentAdmissibilityStatus : String :=

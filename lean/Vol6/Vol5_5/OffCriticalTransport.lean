@@ -84,12 +84,6 @@ structure StrengthenedFinitePacketTransportPackage : Type 1 where
         CondensedHilbertDefectNonzero
           burnolBlaschkeCondensedHilbertDefect
 
-/-- A finite-packet vector together with the nonempty index witness it uses. -/
-structure FinitePacketTransportVector : Type 1 where
-  packet : FiniteBlaschkePacket
-  nonempty : Nonempty packet.ZeroIndex
-  vector : FinitePacketBurnolModelSpace packet
-
 /-- Forget the strengthened package to the legacy finite-packet transport. -/
 def finitePacketTransportPackage_of_strengthened
     (P : StrengthenedFinitePacketTransportPackage) :

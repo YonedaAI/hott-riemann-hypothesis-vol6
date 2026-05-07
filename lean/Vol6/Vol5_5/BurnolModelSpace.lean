@@ -20,8 +20,8 @@ Hilbert defect is nonzero.
 A transparent model-space presentation for the Burnol/Blaschke defect.
 
 The `Carrier` is the new semantic carrier.  The map to Vol5's existing carrier
-keeps compatibility with `OffCriticalZeroDefectKernel`, while
-`nonzeroDefectOf` is the extra datum that the old `Nonempty` bridge forgot.
+keeps compatibility with `OffCriticalZeroDefectKernel`; the nonzero-defect
+proof is carried by `NonzeroBurnolDefectVector`.
 -/
 structure BurnolModelSpace : Type 1 where
   Carrier : Type

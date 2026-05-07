@@ -43,17 +43,8 @@ export default function Home() {
               We reduce the Riemann Hypothesis to four admissibility lemmas in Hardy model-space theory using the categorical language of Yoneda detection and the functional-analytic language of RKHS reproducing kernels. The geometric argument: an off-critical zero of &zeta; produces a nonzero vector in the Burnol&ndash;Blaschke model space{' '}
               <code style={{ fontSize: '0.85em' }}>K_B = H&sup2; / B &middot; H&sup2;</code>; a rational-dilation Yoneda probe detects that vector; admissibility of the defect object in the condensed-Hilbert setting forbids the resulting phantom.
             </p>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: '0 0 0.875rem 0' }}>
-              Volume VI formalises this argument across seven Lean-verified papers. Two principal theorems close unconditionally (finite Blaschke packets, finite-rank RKHS detector completeness). The remaining four reduce to a minimal four-lemma data package, with iff-bridges in each paper proving the named lemma is exactly what the proof needs.
-            </p>
             <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
-              The full development is{' '}
-              <code style={{ fontSize: '0.85em' }}>sorry</code>-,{' '}
-              <code style={{ fontSize: '0.85em' }}>admit</code>-,{' '}
-              <code style={{ fontSize: '0.85em' }}>axiom</code>-, and{' '}
-              <code style={{ fontSize: '0.85em' }}>opaque</code>-free.{' '}
-              <code style={{ fontSize: '0.85em' }}>#print axioms</code>{' '}
-              reveals only standard Lean foundations&mdash;never RH, never Nyman density, never the Beurling&ndash;Nyman criterion.
+              Volume VI formalises this argument across seven Lean-verified papers. Two principal theorems close unconditionally (finite Blaschke packets, finite-rank RKHS detector completeness). The remaining four reduce to a minimal four-lemma data package, with iff-bridges in each paper proving the named lemma is exactly what the proof needs.
             </p>
           </div>
 
