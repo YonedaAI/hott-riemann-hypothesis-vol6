@@ -9,14 +9,14 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Volume VI · No-Phantom Language Discharge',
-    template: '%s | Vol VI · HoTT/Yoneda RH',
+    default: 'Volume VI',
+    template: '%s | Vol VI',
   },
   description:
-    "Discharging the two payloads of vol5's RH_classical_of_no_phantom_language_breakthrough via OffCriticalZeroDefectKernel and YonedaBlaschkeDetectorCalculus.",
+    'Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.',
   openGraph: {
     type: 'website',
-    siteName: 'Vol VI · HoTT/Yoneda RH Programme',
+    siteName: 'Vol VI',
     images: [{ url: '/og-images/paper-07-rh-classical-new-language.png', width: 1200, height: 630 }],
   },
   twitter: {
@@ -39,7 +39,7 @@ export default function RootLayout({
               href="/"
               style={{ color: 'var(--accent)', fontFamily: 'Georgia, serif', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.025em' }}
             >
-              Vol VI · No-Phantom Language Discharge
+              Vol VI
             </Link>
             <nav style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
               <Link href="/#papers" style={{ color: 'inherit' }} className="hover-link">Papers</Link>

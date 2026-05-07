@@ -11,8 +11,8 @@
   Two flavours of the principal theorem are provided:
 
   * `burnol_blaschke_detector_externalization`: the conditional version,
-    parameterized by an `ExternalizationIntroductionRule` (see the
-    obstruction module).  This is the form recommended by the spec
+    parameterized by a detector-indexed `ExternalizationIntroductionRule`
+    (see the obstruction module).  This is the form recommended by the spec
     when the underlying opaque vol5 predicate
     `DefectDetectedByRationalDilationRepresentable` lacks an exposed
     introduction rule.
@@ -78,37 +78,34 @@ noncomputable def canonicalCanonicalPresheaf (X : DQObj) : DQPresheaf :=
 Given:
   * a condensed Hilbert defect `K`,
   * an RKHS detector `S` on `K`,
-  * a `DQObj` witness `X` for the canonical rational dilation
-    semantics,
-  * an `ExternalizationIntroductionRule` for `K` (i.e. the missing vol5
-    introduction rule for the opaque predicate
+  * rational-dilation semantics `R`,
+  * an `ExternalizationIntroductionRule` for `K`, `S`, and `R` (i.e. the missing
+    vol5 detector-indexed introduction rule for the opaque predicate
     `CondensedHilbertDefectDetectedByRationalDilation`),
 
 we produce an explicit inhabitant of
-`RKHSDetectorExternalizationToRationalRepresentables K S
-  (canonicalRationalDilationSemantics X)`.
+`RKHSDetectorExternalizationToRationalRepresentables K S R`.
 
-The externalization map is constant: every detector index is sent to
-the same parameter `()` and the same Yoneda presheaf `yoneda X`.  The
-`presheaf_eq` field is reflexive.  The `detected_of_detector` field
-applies the introduction rule to the (definitional) representability of
-`yoneda X`.
+The presheaf attached to a detector index is the Yoneda presheaf represented by
+the rational-dilation parameter chosen for that index.  The `presheaf_eq` field
+is reflexive, and the `detected_of_detector` field applies the scoped
+introduction rule to the actual detector witness.
 -/
 noncomputable def detector_externalization_of_introduction_rule
     {K : CondensedHilbertDefect}
     (S : RKHSModelSpaceDetector K)
-    (X : DQObj)
-    (iota : ExternalizationIntroductionRule K) :
+    (R : RationalDilationObjectSemantics)
+    (iota : ExternalizationIntroductionRule K S R) :
     RKHSDetectorExternalizationToRationalRepresentables
-      K S (canonicalRationalDilationSemantics X) where
-  parameterOf := fun _ => canonicalRationalParameter
-  presheafOf := fun _ => yoneda X
+      K S R where
+  parameterOf := iota.parameterOf
+  presheafOf := fun d => yoneda (R.objectOf (iota.parameterOf d))
   presheaf_eq := by
     intro _
     rfl
   detected_of_detector := by
-    intro _ _ _
-    exact iota.intro (yoneda X) (yoneda_is_representable X)
+    intro _ _ h
+    exact iota.detected_of_detector h
 
 /--
 The externalization principal theorem for the canonical
@@ -128,13 +125,16 @@ noncomputable def burnol_blaschke_detector_externalization
     (X : DQObj)
     (iota :
       ExternalizationIntroductionRule
-        burnolBlaschkeCondensedHilbertDefect) :
+        burnolBlaschkeCondensedHilbertDefect
+        S
+        (canonicalRationalDilationSemantics X)) :
     RKHSDetectorExternalizationToRationalRepresentables
       burnolBlaschkeCondensedHilbertDefect
       S
       (canonicalRationalDilationSemantics X) :=
   detector_externalization_of_introduction_rule (K :=
-    burnolBlaschkeCondensedHilbertDefect) S X iota
+    burnolBlaschkeCondensedHilbertDefect)
+    S (canonicalRationalDilationSemantics X) iota
 
 /-! ### Trivial-detector unconditional inhabitant -/
 
@@ -224,7 +224,9 @@ noncomputable def burnol_blaschke_detector_externalization_of_obstruction_packag
     (X : DQObj)
     (P :
       ExternalizationObstructionPackage
-        burnolBlaschkeCondensedHilbertDefect) :
+        burnolBlaschkeCondensedHilbertDefect
+        S
+        (canonicalRationalDilationSemantics X)) :
     RKHSDetectorExternalizationToRationalRepresentables
       burnolBlaschkeCondensedHilbertDefect
       S
@@ -236,12 +238,12 @@ noncomputable def burnol_blaschke_detector_externalization_of_obstruction_packag
 
 /-- Audit marker for paper 04. -/
 def rational_dilation_externalization_status : String :=
-  "Vol6 paper 04 installed: RationalDilationExternalization defines detector_externalization_of_introduction_rule (conditional), trivial_detector_externalization (unconditional, empty-carrier case), and the spec-mandated burnol_blaschke_detector_externalization. The opaque vol5 predicate DefectDetectedByRationalDilationRepresentable is documented as the externalization obstruction in Vol6.Obstruction.RationalDilationExternalizationObstruction."
+  "Vol6 paper 04 installed: RationalDilationExternalization defines detector_externalization_of_introduction_rule (conditional and detector-indexed), trivial_detector_externalization (unconditional, empty-carrier case), and the spec-mandated burnol_blaschke_detector_externalization. The opaque vol5 predicate DefectDetectedByRationalDilationRepresentable is documented as the externalization obstruction in Vol6.Obstruction.RationalDilationExternalizationObstruction."
 
 /-- Machine-checkable status marker. -/
 theorem rational_dilation_externalization_status_eq :
     rational_dilation_externalization_status =
-      "Vol6 paper 04 installed: RationalDilationExternalization defines detector_externalization_of_introduction_rule (conditional), trivial_detector_externalization (unconditional, empty-carrier case), and the spec-mandated burnol_blaschke_detector_externalization. The opaque vol5 predicate DefectDetectedByRationalDilationRepresentable is documented as the externalization obstruction in Vol6.Obstruction.RationalDilationExternalizationObstruction." :=
+      "Vol6 paper 04 installed: RationalDilationExternalization defines detector_externalization_of_introduction_rule (conditional and detector-indexed), trivial_detector_externalization (unconditional, empty-carrier case), and the spec-mandated burnol_blaschke_detector_externalization. The opaque vol5 predicate DefectDetectedByRationalDilationRepresentable is documented as the externalization obstruction in Vol6.Obstruction.RationalDilationExternalizationObstruction." :=
   rfl
 
 end RationalDilationExternalization

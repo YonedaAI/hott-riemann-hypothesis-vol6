@@ -5,18 +5,18 @@ import { papers } from "../lib/papers";
 import { renderMathInHtml } from "../lib/render-math";
 
 export const metadata: Metadata = {
-  title: 'Volume VI · No-Phantom Language Discharge',
+  title: 'Volume VI',
   description:
-    "Discharging the two payloads of vol5's RH_classical_of_no_phantom_language_breakthrough via OffCriticalZeroDefectKernel and YonedaBlaschkeDetectorCalculus.",
+    'Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.',
   openGraph: {
-    title: 'Volume VI · No-Phantom Language Discharge',
+    title: 'Volume VI',
     description:
-      "Discharging the two payloads of vol5's RH_classical_of_no_phantom_language_breakthrough via OffCriticalZeroDefectKernel and YonedaBlaschkeDetectorCalculus.",
+      'Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.',
     images: [{ url: '/og-images/paper-07-rh-classical-new-language.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Volume VI · No-Phantom Language Discharge',
+    title: 'Volume VI',
     images: ['/og-images/paper-07-rh-classical-new-language.png'],
   },
 };
@@ -31,28 +31,29 @@ export default function Home() {
             HoTT/Yoneda Riemann Hypothesis Programme
           </div>
           <h1 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '1rem', lineHeight: 1.25 }}>
-            Volume VI &middot; No-Phantom Language Discharge
+            Volume VI
           </h1>
           <p style={{ fontSize: '1.0625rem', color: 'var(--text-muted)', maxWidth: '44rem', margin: '0 auto 2rem', lineHeight: 1.7 }}>
-            Discharging the two payloads of vol5&apos;s{' '}
-            <code style={{ fontSize: '0.875em' }}>RH_classical_of_no_phantom_language_breakthrough</code>{' '}
-            via{' '}
-            <code style={{ fontSize: '0.875em' }}>OffCriticalZeroDefectKernel</code>
-            {' '}and{' '}
-            <code style={{ fontSize: '0.875em' }}>YonedaBlaschkeDetectorCalculus</code>
+            Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.
           </p>
 
-          {/* Honest verdict */}
-          <div className="verdict-box" style={{ padding: '1.25rem 1.5rem', maxWidth: '44rem', margin: '0 auto', textAlign: 'left' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)', marginBottom: '0.625rem' }}>
-              Honest Verdict
-            </div>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.65, margin: 0 }}>
-              Two unconditional theorems closed (papers 01, 02). Four typed-proposition obstructions characterize the residual vol5-structural barrier (papers 03–06) and assemble into the single{' '}
-              <code style={{ fontSize: '0.85em' }}>Vol6FinalObstruction</code>{' '}
-              (paper 07). No <code style={{ fontSize: '0.85em' }}>sorry</code>/<code style={{ fontSize: '0.85em' }}>admit</code>/new-<code style={{ fontSize: '0.85em' }}>axiom</code>/new-<code style={{ fontSize: '0.85em' }}>opaque</code> anywhere.{' '}
-              <code style={{ fontSize: '0.85em' }}>#print axioms RH_classical_new_language_of_obstruction</code>{' '}
-              is clean of RH, Nyman density, and Beurling-Nyman.
+          {/* Argument */}
+          <div className="verdict-box" style={{ padding: '1.5rem 1.75rem', maxWidth: '44rem', margin: '0 auto', textAlign: 'left' }}>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: '0 0 0.875rem 0' }}>
+              If there were a non-trivial zero of the Riemann zeta function off the critical line, it would create a nonzero vector in the Burnol/Blaschke model space{' '}
+              <code style={{ fontSize: '0.85em' }}>K_B = H&sup2; / B &middot; H&sup2;</code>. A rational-dilation Yoneda probe would detect that vector. Admissibility of the defect object forbids the resulting phantom&mdash;so no off-critical zero exists.
+            </p>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: '0 0 0.875rem 0' }}>
+              This volume formalises that argument in seven Lean-verified papers. Two principal theorems close unconditionally (finite Blaschke packets and finite-rank RKHS detector completeness). The remaining four reduce to a minimal four-lemma data package, with iff-bridges proving each lemma is exactly what the proof needs.
+            </p>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
+              The full development is{' '}
+              <code style={{ fontSize: '0.85em' }}>sorry</code>-,{' '}
+              <code style={{ fontSize: '0.85em' }}>admit</code>-,{' '}
+              <code style={{ fontSize: '0.85em' }}>axiom</code>-, and{' '}
+              <code style={{ fontSize: '0.85em' }}>opaque</code>-free.{' '}
+              <code style={{ fontSize: '0.85em' }}>#print axioms</code>{' '}
+              reveals only standard Lean foundations&mdash;never RH, never Nyman density, never the Beurling-Nyman criterion.
             </p>
           </div>
 

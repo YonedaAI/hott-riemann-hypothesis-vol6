@@ -47,12 +47,12 @@
        — RH from a Paper 03 transport bridge plus a Paper 06 sub-target bundle.
 
   3. `Vol6FinalObstruction` — the assembled Vol6 obstruction structure
-       collecting the four named introduction-rule fields produced by Papers
-       03–06.
+       collecting the named introduction-rule fields produced by Papers 03–06,
+       scoped to a concrete detector and rational-dilation object.
 
   4. `RH_classical_new_language_of_obstruction`
-       — RH from the assembled `Vol6FinalObstruction`.  This is the *single
-       canonical residual obstruction* that Vol7 must address.
+       — RH from the assembled `Vol6FinalObstruction`.  This is the canonical
+       residual obstruction schema that Vol7 must address.
 
   We deliberately **do not** ship an unconditional
   `RH_classical_new_language : RH_classical`.  Producing such a term inside
@@ -131,13 +131,14 @@ theorem RH_classical_new_language_of_inputs
 /-! ## 3. The assembled Vol6 final obstruction -/
 
 /--
-**The single canonical Vol6 residual obstruction.**
+**The canonical Vol6 residual obstruction schema.**
 
 This structure collects, in one record, the four named introduction-rule
-inhabitants that Paper 03, Paper 04, and Paper 05 each parameterised over.
-Inhabiting this structure inside Lean is exactly what is required to obtain
-an unconditional `RH_classical_new_language : RH_classical` from the Vol6
-sprint.
+inhabitants that Paper 03, Paper 04, and Paper 05 each parameterised over,
+with the Paper 04 field scoped to the detector `S` and rational-dilation object
+`X` actually used in the assembled payload.  Inhabiting this structure inside
+Lean is exactly what is required to obtain an unconditional
+`RH_classical_new_language : RH_classical` from the Vol6 sprint.
 
 Field map (knowledge-base risk flags):
 
@@ -149,7 +150,9 @@ Field map (knowledge-base risk flags):
 The structure lives in `Type 1` because `bridgeRF01` carries genuinely
 type-level data (a function between `Type`s), not just a proposition.
 -/
-structure Vol6FinalObstruction : Type 1 where
+structure Vol6FinalObstruction
+    (S : RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect)
+    (X : DQObj) : Type 1 where
   /-- Paper 03 bridge: transport from the finite-packet carrier to the
   canonical Burnol/Blaschke `modelSpaceCarrier`.  Discharges RF-01. -/
   bridgeRF01 : OffCriticalDefectKernelBridge
@@ -157,6 +160,8 @@ structure Vol6FinalObstruction : Type 1 where
   detection predicate.  Discharges RF-02 for the externalization atom. -/
   externalIntro :
     ExternalizationIntroductionRule burnolBlaschkeCondensedHilbertDefect
+      S
+      (Vol6.RationalDilationExternalization.canonicalRationalDilationSemantics X)
   /-- Paper 05A cokernel introduction package supplying the
   Yoneda-image-not-detected clause for `blaschkeDefectObject`. -/
   cokernelIntro : CanonicalQuotientOrthogonalityIntroduction
@@ -174,21 +179,18 @@ structure Vol6FinalObstruction : Type 1 where
 
 /--
 A complete inhabitant of `BundledSubTargets` derived from the four
-introduction-rule fields of `Vol6FinalObstruction`, plus an explicit
-detector, an explicit `DQObj`, and the rational dilation semantics
-parameter.
+introduction-rule fields of `Vol6FinalObstruction`, at the explicit detector
+`S`, `DQObj` witness `X`, and rational-dilation semantics parameter.
 
-The detector and `DQObj` arguments are *intentionally* explicit: they
-record the paper-02 / paper-04 data (detector completeness +
-rational-dilation parameter object) that the obstruction structure does
-not need to carry as data, since neither is opaque.  They are produced by
-the canonical paper-02/paper-04 routes; the present module does not
-construct them but accepts them as arguments.
+The detector and `DQObj` arguments are *intentionally* explicit parameters of
+the obstruction schema: they record the paper-02 / paper-04 data (detector
+completeness + rational-dilation parameter object) that should be constructed
+by the canonical paper-02/paper-04 routes.
 -/
 noncomputable def bundledSubTargets_of_obstruction
-    (Ω : Vol6FinalObstruction)
     (S : RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect)
-    (X : DQObj) :
+    (X : DQObj)
+    (Ω : Vol6FinalObstruction S X) :
     Vol6.BundledSubTargets where
   detector := S
   rational :=
@@ -206,11 +208,10 @@ noncomputable def bundledSubTargets_of_obstruction
 /--
 **Principal synthesis theorem (paper 07, level 3).**
 
-Given an inhabitant of the assembled `Vol6FinalObstruction`, an explicit
-detector witness `S`, and an explicit `DQObj` witness `X`, classical RH
+Given an inhabitant of the assembled `Vol6FinalObstruction S X`, classical RH
 follows from the Vol5 master theorem.
 
-This is the **single canonical residual obstruction** Vol7 must close to
+This is the **canonical residual obstruction schema** Vol7 must close to
 obtain an unconditional `RH_classical_new_language : RH_classical`.
 
 Note that `S` and `X` are *not* opaque-discharge data: an
@@ -218,15 +219,15 @@ Note that `S` and `X` are *not* opaque-discharge data: an
 be supplied by the empty-detector under `InternalBlaschkeTriviality`
 (`Vol6.RationalDilationExternalization.burnolBlaschkeEmptyDetector`),
 and a `DQObj` is supplied by Vol5's `axiom NymanKernel` together with
-the existence of an inhabitant (Vol5 surface task, not part of Ω).
+the existence of an inhabitant (a Vol5 surface task).
 -/
 theorem RH_classical_new_language_of_obstruction
-    (Ω : Vol6FinalObstruction)
-    (S : RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect)
-    (X : DQObj) :
+    {S : RKHSModelSpaceDetector burnolBlaschkeCondensedHilbertDefect}
+    {X : DQObj}
+    (Ω : Vol6FinalObstruction S X) :
     RH_classical :=
   RH_classical_new_language_of_inputs Ω.bridgeRF01
-    (bundledSubTargets_of_obstruction Ω S X)
+    (bundledSubTargets_of_obstruction S X Ω)
 
 /-! ## 5. Audit: parameterised RH-of-payload form for paper 07 -/
 
@@ -250,8 +251,8 @@ We DO NOT ship a term
 
 inside Vol6.  Producing such a term without a `sorry`, a new `axiom`, or
 a new `opaque` would require closing all four obstructions
-(`bridgeRF01`, `externalIntro`, `cokernelIntro`, `admissIntro`) plus
-producing a non-empty detector witness `S` and a `DQObj` witness `X`,
+(`bridgeRF01`, detector-scoped `externalIntro`, `cokernelIntro`,
+`admissIntro`) plus producing a non-empty detector witness `S` and a `DQObj` witness `X`,
 all without modifying Vol5.  RF-01–RF-04 demonstrate that the Vol5
 opaque/axiom surface admits no such constructions internally.
 

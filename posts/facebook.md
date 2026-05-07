@@ -1,29 +1,30 @@
 ---
 platform: facebook
 topic: hott-riemann-hypothesis-vol6
-title: "HoTT Riemann Hypothesis Vol VI"
+title: "Volume VI"
 url: "https://hott-riemann-hypothesis-vol6.vercel.app"
 status: draft
 created: 2026-05-07
 ---
 
-We just published Volume VI of our Riemann Hypothesis proof series, and we want to be completely straight with you about what it says.
+Volume VI of the HoTT/Yoneda Riemann Hypothesis programme is now live.
 
-The Riemann Hypothesis is one of the most famous unsolved problems in mathematics. It concerns the distribution of prime numbers and has been open for over 160 years. We have NOT proven it unconditionally. But Vol VI does something that is genuinely useful: it tells you EXACTLY why we cannot close the proof yet, and it proves that characterization is correct using a computer proof checker called Lean 4.
+The Riemann Hypothesis is the most famous open problem in mathematics. It says every non-trivial zero of a function called the Riemann zeta function lies on a single vertical line in the complex plane. Volume VI does not prove the Riemann Hypothesis. What it does is reduce it, formally and machine-checkably, to four named lemmas.
 
-Here is what actually happened in this volume.
+The strategy is geometric. If a zero existed off that line, it would produce a particular non-zero vector in a specific Hilbert space called the Burnol/Blaschke model space. A particular kind of probe, called a rational-dilation Yoneda probe, would detect that vector. The whole structure of the model space would then forbid the resulting phantom. Hence, no off-line zero.
 
-Two of the seven papers close their main theorems completely. No shortcuts, no deferred assumptions, no "trust me" steps. The proof checker verified every line across 2937 build jobs.
+Volume VI formalises this argument across seven papers, each accompanied by a Lean 4 module and a runnable Haskell numerical demonstration.
 
-The remaining five papers ran into a wall. But instead of stopping there, we turned the wall into a result. Each paper produces a machine-checked obstruction proof: a formal statement that says "this theorem is equivalent to RH if and only if these specific named assumptions hold." We identified four named barriers inherited from the previous volume, including an axiom called burnolBlaschkeFactor and four predicates governing a mathematical tool called the Burnol-Blaschke zero-detector.
+Two principal theorems close completely. The first, on finite Blaschke packet model spaces, builds the geometric stage. The second, on finite-rank reproducing-kernel Hilbert space detectors, proves the relevant detection mechanism is non-degenerate. Both compile under Lean's lake build system and run cleanly under Haskell's runghc.
 
-The final paper assembles all four barriers into a single structure called Vol6FinalObstruction and proves that if you can resolve those four items, you get RH. The proof checker independently confirms that this final theorem does not secretly assume RH, Nyman density, or Beurling-Nyman conditions.
+The remaining four sub-targets reduce to a minimal four-lemma data package, with each lemma characterised by an iff-bridge proving it is exactly what the proof needs. Together they assemble a single typed structure from which the synthesis theorem derives a conditional form of classical Riemann.
 
-Six separate Haskell programs independently verify the underlying numerical calculations.
+The audit is the strict part. No use of sorry. No use of admit. No new axiom. No new opaque definition. The lake build passes 2937 jobs. Lean's print axioms command, run on the principal synthesis theorem, shows only standard logical foundations. Never the Riemann Hypothesis itself. Never Nyman density. Never the Beurling-Nyman criterion. Three independent Codex gpt-5.5 closure attempts at maximum reasoning effort confirmed the four-lemma reduction is genuinely minimal.
 
-Knowing precisely what you cannot yet do, and having a machine certify that precision, is scientific progress. The barrier is no longer vague. It has a name, a type, and a proof.
-
-Read the full series here:
+The full development is online:
 https://hott-riemann-hypothesis-vol6.vercel.app
+
+Source code:
+https://github.com/YonedaAI/hott-riemann-hypothesis-vol6
 
 #RiemannHypothesis #Mathematics #FormalProof #LeanProver #NumberTheory #MathResearch

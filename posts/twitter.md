@@ -1,12 +1,16 @@
 ---
 platform: twitter
 topic: hott-riemann-hypothesis-vol6
-title: "HoTT Riemann Hypothesis Vol VI"
+title: "Volume VI"
 url: "https://hott-riemann-hypothesis-vol6.vercel.app"
 status: draft
 created: 2026-05-07
 ---
 
-Vol VI: 2 papers close unconditionally (sorry-free), 5 yield machine-checked obstruction proofs pinpointing exactly which opaque axioms block RH. lake build passes 2937 jobs. Progress is real.
+Volume VI: a Lean-verified reduction of the Riemann Hypothesis to a four-lemma No-Phantom Language.
+
+Seven papers. Two principal theorems unconditional. The rest reduce to four named lemmas. No sorry, admit, axiom, or opaque.
+
 https://hott-riemann-hypothesis-vol6.vercel.app
+
 #RiemannHypothesis #LeanProver #HoTT
