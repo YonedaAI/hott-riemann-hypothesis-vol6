@@ -1,16 +1,16 @@
 ---
 platform: twitter
 topic: hott-riemann-hypothesis-vol6
-title: "Volume VI"
+title: "A Yoneda-RKHS Reduction of the Riemann Hypothesis"
 url: "https://hott-riemann-hypothesis-vol6.vercel.app"
 status: draft
 created: 2026-05-07
 ---
 
-Volume VI: a Lean-verified reduction of the Riemann Hypothesis to a four-lemma No-Phantom Language.
+A Yoneda–RKHS reduction of the Riemann Hypothesis.
 
-Seven papers. Two principal theorems unconditional. The rest reduce to four named lemmas. No sorry, admit, axiom, or opaque.
+Hardy model-space rigidity + condensed-Hilbert admissibility, machine-checked in Lean 4. Two principal theorems unconditional. Four admissibility lemmas isolate the residual.
 
 https://hott-riemann-hypothesis-vol6.vercel.app
 
-#RiemannHypothesis #LeanProver #HoTT
+#RiemannHypothesis #LeanProver

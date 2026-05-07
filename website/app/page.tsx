@@ -5,18 +5,18 @@ import { papers } from "../lib/papers";
 import { renderMathInHtml } from "../lib/render-math";
 
 export const metadata: Metadata = {
-  title: 'Volume VI',
+  title: 'A Yoneda-RKHS Reduction of the Riemann Hypothesis',
   description:
-    'Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.',
+    'Volume VI · Hardy model-space rigidity and condensed-Hilbert admissibility, formalised in Lean 4.',
   openGraph: {
-    title: 'Volume VI',
+    title: 'A Yoneda-RKHS Reduction of the Riemann Hypothesis',
     description:
-      'Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.',
+      'Volume VI · Hardy model-space rigidity and condensed-Hilbert admissibility, formalised in Lean 4.',
     images: [{ url: '/og-images/paper-07-rh-classical-new-language.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Volume VI',
+    title: 'A Yoneda-RKHS Reduction of the Riemann Hypothesis',
     images: ['/og-images/paper-07-rh-classical-new-language.png'],
   },
 };
@@ -30,21 +30,21 @@ export default function Home() {
           <div style={{ display: 'inline-block', background: 'var(--accent-glow)', border: '1px solid var(--border)', borderRadius: '999px', padding: '0.3rem 1rem', fontSize: '0.8125rem', color: 'var(--accent)', marginBottom: '1.5rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             HoTT/Yoneda Riemann Hypothesis Programme
           </div>
-          <h1 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '1rem', lineHeight: 1.25 }}>
-            Volume VI
+          <h1 style={{ fontSize: 'clamp(1.5rem, 3.6vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '1rem', lineHeight: 1.2 }}>
+            A Yoneda&ndash;RKHS Reduction of the Riemann Hypothesis
           </h1>
-          <p style={{ fontSize: '1.0625rem', color: 'var(--text-muted)', maxWidth: '44rem', margin: '0 auto 2rem', lineHeight: 1.7 }}>
-            Reducing the Riemann Hypothesis to a four-lemma No-Phantom Language, in Lean 4.
+          <p style={{ fontSize: '1rem', color: 'var(--text-muted)', maxWidth: '44rem', margin: '0 auto 2rem', lineHeight: 1.7 }}>
+            Volume VI &middot; Hardy model-space rigidity and condensed-Hilbert admissibility, formalised in Lean 4.
           </p>
 
           {/* Argument */}
           <div className="verdict-box" style={{ padding: '1.5rem 1.75rem', maxWidth: '44rem', margin: '0 auto', textAlign: 'left' }}>
             <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: '0 0 0.875rem 0' }}>
-              If there were a non-trivial zero of the Riemann zeta function off the critical line, it would create a nonzero vector in the Burnol/Blaschke model space{' '}
-              <code style={{ fontSize: '0.85em' }}>K_B = H&sup2; / B &middot; H&sup2;</code>. A rational-dilation Yoneda probe would detect that vector. Admissibility of the defect object forbids the resulting phantom&mdash;so no off-critical zero exists.
+              We reduce the Riemann Hypothesis to four admissibility lemmas in Hardy model-space theory using the categorical language of Yoneda detection and the functional-analytic language of RKHS reproducing kernels. The geometric argument: an off-critical zero of &zeta; produces a nonzero vector in the Burnol&ndash;Blaschke model space{' '}
+              <code style={{ fontSize: '0.85em' }}>K_B = H&sup2; / B &middot; H&sup2;</code>; a rational-dilation Yoneda probe detects that vector; admissibility of the defect object in the condensed-Hilbert setting forbids the resulting phantom.
             </p>
             <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: '0 0 0.875rem 0' }}>
-              This volume formalises that argument in seven Lean-verified papers. Two principal theorems close unconditionally (finite Blaschke packets and finite-rank RKHS detector completeness). The remaining four reduce to a minimal four-lemma data package, with iff-bridges proving each lemma is exactly what the proof needs.
+              Volume VI formalises this argument across seven Lean-verified papers. Two principal theorems close unconditionally (finite Blaschke packets, finite-rank RKHS detector completeness). The remaining four reduce to a minimal four-lemma data package, with iff-bridges in each paper proving the named lemma is exactly what the proof needs.
             </p>
             <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
               The full development is{' '}
@@ -53,7 +53,7 @@ export default function Home() {
               <code style={{ fontSize: '0.85em' }}>axiom</code>-, and{' '}
               <code style={{ fontSize: '0.85em' }}>opaque</code>-free.{' '}
               <code style={{ fontSize: '0.85em' }}>#print axioms</code>{' '}
-              reveals only standard Lean foundations&mdash;never RH, never Nyman density, never the Beurling-Nyman criterion.
+              reveals only standard Lean foundations&mdash;never RH, never Nyman density, never the Beurling&ndash;Nyman criterion.
             </p>
           </div>
 

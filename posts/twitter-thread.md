@@ -1,43 +1,36 @@
 ---
 platform: twitter
 topic: hott-riemann-hypothesis-vol6
-title: "Volume VI — Thread"
+title: "A Yoneda-RKHS Reduction of the Riemann Hypothesis — Thread"
 url: "https://hott-riemann-hypothesis-vol6.vercel.app"
 status: draft
 created: 2026-05-07
 ---
 
-1/5 Volume VI: a Lean-verified reduction of the Riemann Hypothesis to a four-lemma No-Phantom Language.
+1/5 A Yoneda–RKHS reduction of the Riemann Hypothesis.
 
-The argument: an off-critical zero would create a nonzero vector in K_B = H^2 / B·H^2; a rational-dilation Yoneda probe detects it; admissibility forbids the resulting phantom.
+Volume VI: Hardy model-space rigidity and condensed-Hilbert admissibility, formalised end-to-end in Lean 4.
 
-2/5 Two unconditional theorems.
+The argument is a no-phantom theorem in the combined Yoneda + RKHS + Hardy + condensed setting.
 
-Paper 01: finite Blaschke packet model spaces have nonzero kernel vectors.
+2/5 The geometry: an off-critical zero of ζ would create a nonzero vector in the Burnol-Blaschke model space K_B = H² / B·H². A rational-dilation Yoneda probe detects that vector. Admissibility of the defect in the condensed-Hilbert setting forbids the resulting phantom.
 
-Paper 02: finite-rank RKHS detector completeness via Cauchy/Pick determinant nondegeneracy.
+3/5 Two principal theorems close unconditionally:
+
+— Finite Blaschke packet model spaces have nonzero reproducing-kernel vectors.
+— Finite-rank RKHS detector completeness via Cauchy/Pick determinant nondegeneracy.
 
 Both lake-build clean, runghc-verified on a 3-zero packet.
 
-3/5 The remaining four (off-critical defect kernel, rational-dilation externalization, quotient orthogonality, admissibility) reduce to a minimal four-lemma data package.
+4/5 The remaining four (off-critical defect kernel, rational-dilation externalization, quotient orthogonality, admissibility) reduce to a minimal four-lemma data package, with iff-bridges proving each lemma is exactly what the proof needs.
 
-Each comes with an iff-bridge proving the lemma is exactly what the proof needs—nothing more.
+5/5 Audit:
+• lake build PASS (2937 jobs)
+• zero sorry / admit / new axiom / new opaque
+• #print axioms: standard Lean foundations only
+• never RH, never Nyman density, never Beurling-Nyman
 
-4/5 Audit:
-
-lake build PASS (2937 jobs)
-zero sorry / admit / new axiom / new opaque
-#print axioms: standard Lean foundations only
-never RH, never Nyman density, never Beurling-Nyman
-
-Three independent Codex gpt-5.5 closure attempts confirmed the four-lemma reduction is minimal.
-
-5/5 Seven papers. Seven Lean modules. Six runghc-runnable Haskell artifacts. One synthesis theorem.
-
-Read the development:
 https://hott-riemann-hypothesis-vol6.vercel.app
-
-Source on GitHub:
 https://github.com/YonedaAI/hott-riemann-hypothesis-vol6
 
-#RiemannHypothesis #LeanProver #HoTT
+#RiemannHypothesis #LeanProver #CategoryTheory #HardySpaces
